@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Referral Portal</title>
+  <style>
+    /* ── Tokens ── */
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --card:      #20243a;
+      --border:    #2e3251;
+      --accent:    #4f8eff;
+      --accent2:   #36cfae;
+      --danger:    #e05c6e;
+      --text:      #e4e8f7;
+      --muted:     #7880a4;
+      --radius:    10px;
+      --shadow:    0 4px 24px rgba(0,0,0,.45);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Login ── */
+    #login-page {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+      background: radial-gradient(ellipse at 60% 30%, #1a2050 0%, var(--bg) 70%);
+    }
+
+    .login-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: var(--shadow);
+    }
+
+    .login-logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .login-logo .mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 52px;
+      height: 52px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 14px;
+      margin-bottom: .75rem;
+    }
+
+    .login-logo .mark svg { color: #fff; }
+
+    .login-logo h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .login-logo p {
+      font-size: .8rem;
+      color: var(--muted);
+      margin-top: .2rem;
+    }
+
+    label {
+      display: block;
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: .04em;
+      margin-bottom: .35rem;
+    }
+
+    input[type="text"], input[type="password"], input[type="date"], input[type="search"] {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: .65rem .85rem;
+      font-size: .9rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    input:focus { border-color: var(--accent); }
+
+    .field { margin-bottom: 1.1rem; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+      background: linear-gradient(135deg, var(--accent), #3a7bff);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: .72rem 1.4rem;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+      width: 100%;
+    }
+
+    .btn:hover { opacity: .9; }
+    .btn:active { transform: scale(.98); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .error-msg {
+      background: rgba(224,92,110,.12);
+      border: 1px solid rgba(224,92,110,.35);
+      color: var(--danger);
+      border-radius: 8px;
+      padding: .6rem .85rem;
+      font-size: .83rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .error-msg.show { display: block; }
+
+    /* ── Dashboard ── */
+    #dashboard-page { display: none; }
+
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: .9rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .topbar-brand .dot {
+      width: 8px; height: 8px;
+      background: var(--accent2);
+      border-radius: 50%;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: .35rem .8rem;
+      font-size: .82rem;
+      font-weight: 600;
+    }
+
+    .user-pill .avatar {
+      width: 24px; height: 24px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .65rem; font-weight: 700; color: #fff;
+    }
+
+    .btn-logout {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      padding: .35rem .8rem;
+      font-size: .8rem;
+      cursor: pointer;
+      transition: border-color .2s, color .2s;
+    }
+
+    .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
+
+    .dashboard-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+    }
+
+    /* ── Summary Cards ── */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.1rem 1.2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+
+    .stat-label {
+      font-size: .72rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: .45rem;
+    }
+
+    .stat-value {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .stat-value.green { color: var(--accent2); }
+    .stat-value.blue  { color: var(--accent); }
+
+    .stat-sub {
+      font-size: .75rem;
+      color: var(--muted);
+      margin-top: .3rem;
+    }
+
+    /* ── Controls Bar ── */
+    .controls-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: .75rem;
+      align-items: flex-end;
+    }
+
+    .controls-bar .field {
+      margin: 0;
+      min-width: 150px;
+      flex: 1;
+    }
+
+    .btn-apply {
+      background: linear-gradient(135deg, var(--accent), #3a7bff);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: .65rem 1.3rem;
+      font-size: .87rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity .2s;
+    }
+
+    .btn-apply:hover { opacity: .87; }
+
+    .btn-reset {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: var(--radius);
+      padding: .65rem 1rem;
+      font-size: .87rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color .2s;
+    }
+
+    .btn-reset:hover { border-color: var(--muted); }
+
+    .search-wrap {
+      position: relative;
+      flex: 2;
+      min-width: 180px;
+    }
+
+    .search-wrap svg {
+      position: absolute;
+      left: .7rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .search-wrap input {
+      padding-left: 2.1rem;
+    }
+
+    /* ── Filter badges ── */
+    .filter-toggle {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .filter-toggle label {
+      margin: 0;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+      color: var(--text);
+      font-size: .83rem;
+    }
+
+    input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+    }
+
+    /* ── Table ── */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .85rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table-title {
+      font-size: .9rem;
+      font-weight: 700;
+    }
+
+    .record-count {
+      font-size: .78rem;
+      color: var(--muted);
+    }
+
+    .table-scroll { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .83rem;
+    }
+
+    thead th {
+      background: var(--card);
+      padding: .7rem 1rem;
+      text-align: left;
+      color: var(--muted);
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(79,142,255,.05); }
+
+    tbody tr.highlight { background: rgba(79,142,255,.13); }
+
+    td {
+      padding: .75rem 1rem;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: .2rem .55rem;
+      border-radius: 99px;
+      font-size: .72rem;
+      font-weight: 700;
+    }
+
+    .badge-green { background: rgba(54,207,174,.15); color: var(--accent2); }
+    .badge-blue  { background: rgba(79,142,255,.15); color: var(--accent); }
+    .badge-dim   { background: rgba(120,128,164,.12); color: var(--muted); }
+
+    /* ── Empty / Loading ── */
+    .state-box {
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+
+    .state-box svg {
+      color: var(--border);
+      margin-bottom: .75rem;
+    }
+
+    .state-box p {
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 0 auto .75rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .topbar { padding: .7rem 1rem; }
+      .dashboard-inner { padding: 1rem .75rem 2rem; }
+      .summary-grid { grid-template-columns: 1fr 1fr; }
+      .stat-value { font-size: 1.25rem; }
+    }
+
+    @media (max-width: 400px) {
+      .summary-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Search highlight ── */
+    mark {
+      background: rgba(79,142,255,.32);
+      color: inherit;
+      border-radius: 3px;
+      padding: 0 2px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════ LOGIN PAGE ════════════ -->
+<div id="login-page">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="mark">
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+      <h1>Referral Portal</h1>
+      <p>Sign in to view your account</p>
+    </div>
+
+    <div id="login-error" class="error-msg"></div>
+
+    <div class="field">
+      <label for="inp-name">Referral Person Name</label>
+      <input id="inp-name" type="text" placeholder="Your name" autocomplete="username" />
+    </div>
+
+    <div class="field">
+      <label for="inp-pass">Password</label>
+      <input id="inp-pass" type="password" placeholder="••••••" autocomplete="current-password" />
+    </div>
+
+    <button id="btn-login" class="btn">Sign In</button>
+  </div>
+</div>
+
+<!-- ════════════ DASHBOARD PAGE ════════════ -->
+<div id="dashboard-page">
+
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="dot"></div>
+      Referral Portal
+    </div>
+    <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
+      <div class="user-pill">
+        <div class="avatar" id="user-avatar"></div>
+        <span id="user-name-label">User</span>
+      </div>
+      <button class="btn-logout" id="btn-logout">Sign out</button>
+    </div>
+  </div>
+
+  <div class="dashboard-inner">
+
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Patients</div>
+        <div class="stat-value" id="s-patients">0</div>
+        <div class="stat-sub">in selected period</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Business</div>
+        <div class="stat-value green" id="s-business">৳0</div>
+        <div class="stat-sub">total business amount</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Commission Received</div>
+        <div class="stat-value blue" id="s-commission">৳0</div>
+        <div class="stat-sub">referral commission total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Commission Rate</div>
+        <div class="stat-value" id="s-rate">—</div>
+        <div class="stat-sub">your commission %</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Admin Share</div>
+        <div class="stat-value" id="s-admin">৳0</div>
+        <div class="stat-sub">admin received amount</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-bar">
+      <!-- Date From -->
+      <div class="field">
+        <label for="f-from">From Date</label>
+        <input type="date" id="f-from" />
+      </div>
+      <!-- Date To -->
+      <div class="field">
+        <label for="f-to">To Date</label>
+        <input type="date" id="f-to" />
+      </div>
+      <!-- Bill Received filter -->
+      <div class="field" style="flex:0 0 auto;min-width:auto;">
+        <label>&nbsp;</label>
+        <div class="filter-toggle" style="padding:.65rem 0;">
+          <label>
+            <input type="checkbox" id="f-bill-zero" />
+            Bill Received = 0 only
+          </label>
+        </div>
+      </div>
+      <!-- Search -->
+      <div class="search-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="search" id="f-search" placeholder="Search patients, location…" />
+      </div>
+      <!-- Buttons -->
+      <button class="btn-apply" id="btn-apply">Apply Filters</button>
+      <button class="btn-reset" id="btn-reset">Reset</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <div class="table-header">
+        <span class="table-title">Patient Records</span>
+        <span class="record-count" id="record-count">0 records</span>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Serial</th>
+              <th>Patient Name</th>
+              <th>Phone</th>
+              <th>Location</th>
+              <th>Bill Date</th>
+              <th>Payment</th>
+              <th>Bill Received</th>
+              <th>Bill Due</th>
+              <th>Total Business</th>
+              <th>Admin Received</th>
+              <th>Commission</th>
+              <th>Match Person</th>
+              <th>Total Match</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+          </tbody>
+        </table>
+      </div>
+      <div id="table-empty" class="state-box" style="display:none;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/><path d="M8 15h8M9 9h.01M15 9h.01"/>
+        </svg>
+        <p>No records match the current filters.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════ SCRIPT ════════════ -->
+<script>
+  /* ── Config ── */
+  const WEBHOOK_URL = 'https://n8n.doitfastit.com/webhook/verify-referral';
+
+  /* ── State ── */
+  let allRecords = [];    // raw from API
+  let currentRecords = []; // after filters
+  let commissionRate = '';
+  let userName = '';
+
+  /* ── DOM refs ── */
+  const loginPage   = document.getElementById('login-page');
+  const dashPage    = document.getElementById('dashboard-page');
+  const loginError  = document.getElementById('login-error');
+  const btnLogin    = document.getElementById('btn-login');
+  const inpName     = document.getElementById('inp-name');
+  const inpPass     = document.getElementById('inp-pass');
+  const btnLogout   = document.getElementById('btn-logout');
+  const fFrom       = document.getElementById('f-from');
+  const fTo         = document.getElementById('f-to');
+  const fBillZero   = document.getElementById('f-bill-zero');
+  const fSearch     = document.getElementById('f-search');
+  const btnApply    = document.getElementById('btn-apply');
+  const btnReset    = document.getElementById('btn-reset');
+  const tableBody   = document.getElementById('table-body');
+  const tableEmpty  = document.getElementById('table-empty');
+  const recordCount = document.getElementById('record-count');
+
+  /* ── Helpers ── */
+  const fmt = n => {
+    const num = parseFloat(n) || 0;
+    return '৳' + num.toLocaleString('en-IN', { minimumFractionDigits: 0 });
+  };
+
+  const fmtDate = s => {
+    if (!s) return '—';
+    const d = new Date(s);
+    return isNaN(d) ? s : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  function highlight(text, query) {
+    if (!query) return esc(text);
+    const re = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+    return esc(String(text ?? '')).replace(re, '<mark>$1</mark>');
+  }
+
+  function showError(msg) {
+    loginError.textContent = msg;
+    loginError.classList.add('show');
+  }
+
+  function clearError() {
+    loginError.classList.remove('show');
+  }
+
+  /* ── Login ── */
+  async function doLogin() {
+    clearError();
+    const name = inpName.value.trim();
+    const pass = inpPass.value.trim();
+
+    if (!name || !pass) {
+      showError('Please enter your name and password.');
+      return;
+    }
+
+    btnLogin.disabled = true;
+    btnLogin.textContent = 'Signing in…';
+
+    try {
+      const res = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ name, password: pass })
+      });
+
+      // Read body as text first so we can inspect it regardless of content-type
+      const rawText = await res.text().catch(() => '');
+
+      // Non-2xx without parseable JSON → auth failure
+      if (!res.ok) {
+        try {
+          const errJson = JSON.parse(rawText);
+          showError(errJson.message || 'Incorrect name or password. Please try again.');
+        } catch {
+          showError('Incorrect name or password. Please try again.');
+        }
+        return;
+      }
+
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        showError('Unexpected response from server. Please try again.');
+        return;
+      }
+
+      /*
+       * The n8n automation can return:
+       *  (a) Array of patient record objects  — success
+       *  (b) Single patient record object     — success (1 record)
+       *  (c) { success: false, message: "…" } — auth failure from Respond Password Fail node
+       *  (d) { success: true, months: […] }   — should not happen on this endpoint, guard anyway
+       */
+      if (Array.isArray(data)) {
+        if (data.length === 0) {
+          showError('No records found for this account. Please contact admin.');
+          return;
+        }
+        const first = data[0];
+        // Auth failure wrapped in array
+        if (first && first.success === false) {
+          showError(first.message || 'Incorrect name or password. Please try again.');
+          return;
+        }
+        allRecords = data;
+
+      } else if (data && typeof data === 'object') {
+        // Explicit failure object
+        if (data.success === false) {
+          showError(data.message || 'Incorrect name or password. Please try again.');
+          return;
+        }
+        // Unexpected shape (e.g. months list)
+        if (data.months !== undefined) {
+          showError('Authentication succeeded but no patient records were returned.');
+          return;
+        }
+        // Single record object
+        allRecords = [data];
+
+      } else {
+        showError('Unexpected server response. Please try again.');
+        return;
+      }
+
+      // Only patient records have 'Patient Name'; do a sanity check
+      if (!allRecords[0]?.['Patient Name'] && !allRecords[0]?.['Referral Person']) {
+        showError('Incorrect name or password. Please try again.');
+        return;
+      }
+
+      // Extract commission rate (stored as decimal 0–1 in the sheet, displayed as %)
+      const rawRate = allRecords[0]?.['Commission Rate'];
+      if (rawRate !== undefined && rawRate !== null && rawRate !== '') {
+        const r = parseFloat(rawRate);
+        commissionRate = isNaN(r) ? String(rawRate) : ((r <= 1 ? r * 100 : r).toFixed(0) + '%');
+      } else {
+        commissionRate = '—';
+      }
+      userName = name;
+
+      // Boot dashboard
+      bootDashboard();
+
+    } catch (err) {
+      console.error(err);
+      showError('Network error. Please check your connection and try again.');
+    } finally {
+      btnLogin.disabled = false;
+      btnLogin.textContent = 'Sign In';
+    }
+  }
+
+  /* ── Dashboard Bootstrap ── */
+  function bootDashboard() {
+    // Set user info
+    document.getElementById('user-name-label').textContent = userName;
+    document.getElementById('user-avatar').textContent = userName.charAt(0).toUpperCase();
+
+    // Default date range: this month
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    fFrom.value = `${y}-${m}-01`;
+    const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
+    fTo.value = `${y}-${m}-${lastDay}`;
+
+    // Show dashboard
+    loginPage.style.display = 'none';
+    dashPage.style.display = 'block';
+
+    applyFilters();
+  }
+
+  /* ── Filters & Rendering ── */
+  function applyFilters() {
+    const from   = fFrom.value ? new Date(fFrom.value) : null;
+    const to     = fTo.value   ? new Date(fTo.value + 'T23:59:59') : null;
+    const billZ  = fBillZero.checked;
+    const query  = fSearch.value.trim().toLowerCase();
+
+    currentRecords = allRecords.filter(r => {
+      // Date filter on Bill Received Date
+      if (from || to) {
+        const d = r['Bill Received Date'] ? new Date(r['Bill Received Date']) : null;
+        if (!d) return false;
+        if (from && d < from) return false;
+        if (to   && d > to)   return false;
+      }
+
+      // Bill Received Amount = 0 filter
+      if (billZ) {
+        const amt = parseFloat(r['Bill Received Amount'] ?? r['Bill Received Due'] ?? 0);
+        if (amt !== 0) return false;
+      }
+
+      // Search filter
+      if (query) {
+        const searchable = [
+          r['Patient Name'], r['Location'], r['Patient Phone Number'],
+          r['Match Person Name'], r['Serial'], r['Bill Received Date']
+        ].map(v => String(v ?? '').toLowerCase()).join(' ');
+        if (!searchable.includes(query)) return false;
+      }
+
+      return true;
+    });
+
+    renderSummary();
+    renderTable(query);
+  }
+
+  function renderSummary() {
+    const total      = currentRecords.length;
+    const business   = currentRecords.reduce((a, r) => a + (parseFloat(r['Total Business Amount']) || 0), 0);
+    const commission = currentRecords.reduce((a, r) => a + (parseFloat(r['Referral Commission']) || 0), 0);
+    const admin      = currentRecords.reduce((a, r) => a + (parseFloat(r['Admin Received Amount']) || 0), 0);
+
+    document.getElementById('s-patients').textContent   = total.toLocaleString();
+    document.getElementById('s-business').textContent   = fmt(business);
+    document.getElementById('s-commission').textContent = fmt(commission);
+    document.getElementById('s-rate').textContent       = commissionRate || '—';
+    document.getElementById('s-admin').textContent      = fmt(admin);
+  }
+
+  function renderTable(query = '') {
+    if (currentRecords.length === 0) {
+      tableBody.innerHTML = '';
+      tableEmpty.style.display = 'block';
+      recordCount.textContent = '0 records';
+      return;
+    }
+
+    tableEmpty.style.display = 'none';
+    recordCount.textContent = currentRecords.length.toLocaleString() + ' record' + (currentRecords.length !== 1 ? 's' : '');
+
+    // Build rows
+    const rows = currentRecords.map((r, i) => {
+      const billAmt  = parseFloat(r['Bill Received Amount'] ?? 0);
+      const billDue  = parseFloat(r['Bill Received Due'] ?? 0);
+      const totalM   = r['Total Match'];
+      const matchBadge = totalM && String(totalM).trim() !== '' && totalM !== '0'
+        ? `<span class="badge badge-green">${esc(totalM)}</span>`
+        : `<span class="badge badge-dim">—</span>`;
+
+      return `
+        <tr data-idx="${i}">
+          <td style="color:var(--muted);">${i + 1}</td>
+          <td><span class="badge badge-blue">${esc(r['Serial'] ?? '—')}</span></td>
+          <td style="font-weight:600;">${highlight(r['Patient Name'], query)}</td>
+          <td style="color:var(--muted);">${highlight(r['Patient Phone Number'], query)}</td>
+          <td>${highlight(r['Location'], query)}</td>
+          <td>${fmtDate(r['Bill Received Date'])}</td>
+          <td>${fmt(r['Payment'])}</td>
+          <td>${billAmt === 0 ? '<span style="color:var(--danger);">৳0</span>' : fmt(billAmt)}</td>
+          <td>${billDue > 0 ? `<span style="color:var(--danger);">${fmt(billDue)}</span>` : '<span style="color:var(--muted);">—</span>'}</td>
+          <td style="font-weight:600;">${fmt(r['Total Business Amount'])}</td>
+          <td>${fmt(r['Admin Received Amount'])}</td>
+          <td style="color:var(--accent2);font-weight:600;">${fmt(r['Referral Commission'])}</td>
+          <td>${highlight(r['Match Person Name'], query)}</td>
+          <td>${matchBadge}</td>
+        </tr>`;
+    }).join('');
+
+    tableBody.innerHTML = rows;
+
+    // Scroll to first highlighted row if search active
+    if (query) {
+      const firstMatch = tableBody.querySelector('tr');
+      if (firstMatch) {
+        firstMatch.classList.add('highlight');
+        firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }
+
+  /* ── Logout ── */
+  function doLogout() {
+    allRecords = [];
+    currentRecords = [];
+    commissionRate = '';
+    userName = '';
+    inpName.value = '';
+    inpPass.value = '';
+    fSearch.value = '';
+    fFrom.value = '';
+    fTo.value = '';
+    fBillZero.checked = false;
+    tableBody.innerHTML = '';
+    dashPage.style.display = 'none';
+    loginPage.style.display = 'flex';
+    clearError();
+  }
+
+  /* ── Event Listeners ── */
+  btnLogin.addEventListener('click', doLogin);
+  btnLogout.addEventListener('click', doLogout);
+  btnApply.addEventListener('click', applyFilters);
+  btnReset.addEventListener('click', () => {
+    fFrom.value = '';
+    fTo.value = '';
+    fBillZero.checked = false;
+    fSearch.value = '';
+    applyFilters();
+  });
+
+  // Live search (debounced)
+  let searchTimer;
+  fSearch.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(applyFilters, 220);
+  });
+
+  // Enter to login
+  [inpName, inpPass].forEach(el => {
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  });
+</script>
+</body>
+</html>
