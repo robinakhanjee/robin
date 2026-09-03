@@ -541,34 +541,63 @@ async function doLogin() {
     try { data = JSON.parse(raw); }
     catch { showError('Unexpected server response. Please try again.'); return; }
 
-    /* Normalise: always work with an array */
-    let records = Array.isArray(data) ? data : [data];
-
-    /* Auth failure from automation */
-    if (records[0]?.success === false) {
-      showError(records[0].message || 'Incorrect name or password. Please try again.');
+    /* Auth failure from automation (can arrive as an array or a bare object) */
+    const authProbe = Array.isArray(data) ? data[0] : data;
+    if (authProbe?.success === false) {
+      showError(authProbe.message || 'Incorrect name or password. Please try again.');
       return;
+    }
+
+    /* ─────────────────────────────────────────────────────────
+       Extract the dataset + account type from the response.
+
+       Two shapes are now in play:
+
+       1) Normal user  → response is an array of record objects
+          (unchanged, legacy behavior):
+             [ {Patient Name:..., Referral Person:...}, ... ]
+
+       2) Admin        → the automation now consolidates everything
+          into ONE object containing a single internal array of
+          records (per execution 61476, that array lives under the
+          key "" produced by the Aggregate node). We don't hardcode
+          the exact key name — we look for it, with a couple of
+          sensible fallbacks in case the automation's field naming
+          shifts slightly (e.g. "data"/"records"/"items").
+    ───────────────────────────────────────────────────────── */
+    let records = [];
+    let isAdmin = false;
+
+    if (Array.isArray(data)) {
+      /* Legacy / normal-user shape: array of records directly */
+      records = data;
+      const uniqueReferrers = new Set(records.map(r => r['Referral Person']).filter(Boolean));
+      isAdmin = uniqueReferrers.size > 1 ||
+                (uniqueReferrers.size >= 1 && name.toLowerCase() === 'admin');
+    } else if (data && typeof data === 'object') {
+      /* New consolidated shape: single object wrapping the dataset */
+      const knownKeys = ['', 'data', 'records', 'items', 'result', 'results'];
+      let arrayKey = knownKeys.find(k => Array.isArray(data[k]) && data[k].length);
+      if (arrayKey === undefined) {
+        /* Fallback: first array-valued property on the object */
+        arrayKey = Object.keys(data).find(k => Array.isArray(data[k]));
+      }
+
+      if (arrayKey !== undefined && Array.isArray(data[arrayKey])) {
+        records = data[arrayKey];
+        isAdmin = true; // consolidated single-object shape is the Admin path
+      } else if (data['Patient Name'] || data['Referral Person']) {
+        /* Single normal-user record returned as a bare object */
+        records = [data];
+        isAdmin = false;
+      }
     }
 
     /* Sanity: must have patient-like records */
-    if (!records[0]?.['Patient Name'] && !records[0]?.['Referral Person']) {
+    if (!records.length || (!records[0]?.['Patient Name'] && !records[0]?.['Referral Person'])) {
       showError('Incorrect name or password. Please try again.');
       return;
     }
-
-    /* Determine account type from backend data:
-       Admin records include multiple different Referral Persons
-       OR the automation itself routed through the admin path.
-       The automation decides — we detect it by checking if
-       records contain multiple distinct Referral Persons OR
-       if the name sent was 'admin' (the automation enforces this anyway). */
-    const uniqueReferrers = new Set(records.map(r => r['Referral Person']).filter(Boolean));
-    const isAdmin = uniqueReferrers.size > 1 ||
-                    (uniqueReferrers.size >= 1 && name.toLowerCase() === 'admin');
-
-    state.isAdmin = isAdmin;
-    state.userName = name;
-    state.allRecords = records;
 
     /* Commission rate for non-admin (single user) */
     if (!isAdmin && records[0]?.['Commission Rate'] !== undefined) {
@@ -583,6 +612,10 @@ async function doLogin() {
     } else {
       state.commissionRate = '—';
     }
+
+    state.isAdmin = isAdmin;
+    state.userName = name;
+    state.allRecords = records;
 
     bootApp();
 
