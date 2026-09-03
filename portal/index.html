@@ -1,486 +1,240 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Referral Portal</title>
   <style>
-    /* ── Tokens ── */
-    :root {
-      --bg:        #0f1117;
-      --surface:   #1a1d27;
-      --card:      #20243a;
-      --border:    #2e3251;
-      --accent:    #4f8eff;
-      --accent2:   #36cfae;
-      --danger:    #e05c6e;
-      --text:      #e4e8f7;
-      --muted:     #7880a4;
-      --radius:    10px;
-      --shadow:    0 4px 24px rgba(0,0,0,.45);
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    /* ══════════════ TOKENS ══════════════ */
+    :root{
+      --bg:#0c0e18;--surface:#13162a;--card:#1b1f35;
+      --border:#262b4a;--border2:#1e2340;
+      --accent:#5b8df6;--a2:#34d4a8;--warn:#f5a623;--danger:#e05c72;
+      --text:#dde3f8;--sub:#8490bf;--dim:#4a5278;
+      --radius:10px;--sh:0 4px 28px rgba(0,0,0,.55);
+      font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
     }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);min-height:100vh}
+    /* ══ UTILS ══ */
+    .hidden{display:none!important}
+    mark{background:rgba(91,141,246,.28);color:inherit;border-radius:3px;padding:0 2px}
+    /* ══════════════ LOGIN ══════════════ */
+    #login-page{
+      display:flex;align-items:center;justify-content:center;
+      min-height:100vh;padding:1rem;
+      background:radial-gradient(ellipse at 65% 25%,#152060 0%,var(--bg) 68%);
     }
-
-    /* ── Login ── */
-    #login-page {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 1rem;
-      background: radial-gradient(ellipse at 60% 30%, #1a2050 0%, var(--bg) 70%);
+    .login-box{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:18px;padding:2.6rem 2.2rem;width:100%;max-width:400px;
+      box-shadow:var(--sh);
     }
-
-    .login-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 2.5rem 2rem;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: var(--shadow);
+    .login-logo{text-align:center;margin-bottom:2rem}
+    .login-logo .mark{
+      display:inline-flex;align-items:center;justify-content:center;
+      width:54px;height:54px;border-radius:15px;margin-bottom:.8rem;
+      background:linear-gradient(135deg,var(--accent),var(--a2));
     }
-
-    .login-logo {
-      text-align: center;
-      margin-bottom: 2rem;
+    .login-logo h1{font-size:1.3rem;font-weight:800}
+    .login-logo p{font-size:.78rem;color:var(--sub);margin-top:.25rem}
+    label{display:block;font-size:.74rem;font-weight:700;color:var(--sub);letter-spacing:.05em;margin-bottom:.3rem}
+    input[type=text],input[type=password],input[type=date],input[type=search],select{
+      width:100%;background:var(--card);border:1px solid var(--border);
+      border-radius:var(--radius);color:var(--text);padding:.62rem .82rem;
+      font-size:.88rem;outline:none;transition:border-color .18s;
     }
-
-    .login-logo .mark {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 52px;
-      height: 52px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border-radius: 14px;
-      margin-bottom: .75rem;
+    select option{background:var(--card)}
+    input:focus,select:focus{border-color:var(--accent)}
+    .field{margin-bottom:1.05rem}
+    .btn-primary{
+      display:inline-flex;align-items:center;justify-content:center;gap:.4rem;
+      background:linear-gradient(135deg,var(--accent),#3f6fe8);color:#fff;
+      border:none;border-radius:var(--radius);padding:.72rem 1.5rem;
+      font-size:.9rem;font-weight:700;cursor:pointer;width:100%;
+      transition:opacity .18s,transform .1s;
     }
-
-    .login-logo .mark svg { color: #fff; }
-
-    .login-logo h1 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--text);
+    .btn-primary:hover{opacity:.88}
+    .btn-primary:active{transform:scale(.98)}
+    .btn-primary:disabled{opacity:.45;cursor:not-allowed}
+    .error-msg{
+      background:rgba(224,92,114,.1);border:1px solid rgba(224,92,114,.35);
+      color:var(--danger);border-radius:8px;padding:.6rem .85rem;
+      font-size:.82rem;margin-bottom:1rem;display:none;
     }
-
-    .login-logo p {
-      font-size: .8rem;
-      color: var(--muted);
-      margin-top: .2rem;
+    .error-msg.show{display:block}
+    /* ══════════════ SHELL ══════════════ */
+    #app-page{display:none}
+    .topbar{
+      background:var(--surface);border-bottom:1px solid var(--border);
+      padding:.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between;
+      gap:1rem;position:sticky;top:0;z-index:200;
     }
-
-    label {
-      display: block;
-      font-size: .78rem;
-      font-weight: 600;
-      color: var(--muted);
-      letter-spacing: .04em;
-      margin-bottom: .35rem;
+    .topbar-brand{display:flex;align-items:center;gap:.55rem;font-weight:800;font-size:1rem}
+    .topbar-brand .live{width:8px;height:8px;background:var(--a2);border-radius:50%}
+    .user-pill{
+      display:flex;align-items:center;gap:.5rem;background:var(--card);
+      border:1px solid var(--border);border-radius:999px;padding:.3rem .75rem;
+      font-size:.8rem;font-weight:700;
     }
-
-    input[type="text"], input[type="password"], input[type="date"], input[type="search"] {
-      width: 100%;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--text);
-      padding: .65rem .85rem;
-      font-size: .9rem;
-      outline: none;
-      transition: border-color .2s;
+    .avatar{
+      width:24px;height:24px;border-radius:50%;
+      background:linear-gradient(135deg,var(--accent),var(--a2));
+      display:flex;align-items:center;justify-content:center;
+      font-size:.64rem;font-weight:800;color:#fff;flex-shrink:0;
     }
-
-    input:focus { border-color: var(--accent); }
-
-    .field { margin-bottom: 1.1rem; }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: .4rem;
-      background: linear-gradient(135deg, var(--accent), #3a7bff);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      padding: .72rem 1.4rem;
-      font-size: .9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity .2s, transform .1s;
-      width: 100%;
+    .admin-badge{
+      background:rgba(245,166,35,.14);color:var(--warn);
+      border:1px solid rgba(245,166,35,.3);border-radius:5px;
+      font-size:.65rem;font-weight:800;padding:.1rem .45rem;letter-spacing:.04em;
     }
-
-    .btn:hover { opacity: .9; }
-    .btn:active { transform: scale(.98); }
-    .btn:disabled { opacity: .5; cursor: not-allowed; }
-
-    .error-msg {
-      background: rgba(224,92,110,.12);
-      border: 1px solid rgba(224,92,110,.35);
-      color: var(--danger);
-      border-radius: 8px;
-      padding: .6rem .85rem;
-      font-size: .83rem;
-      margin-bottom: 1rem;
-      display: none;
+    .btn-logout{
+      background:transparent;border:1px solid var(--border);color:var(--sub);
+      border-radius:8px;padding:.3rem .75rem;font-size:.78rem;cursor:pointer;
+      transition:border-color .18s,color .18s;
     }
-
-    .error-msg.show { display: block; }
-
-    /* ── Dashboard ── */
-    #dashboard-page { display: none; }
-
-    .topbar {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: .9rem 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      position: sticky;
-      top: 0;
-      z-index: 100;
+    .btn-logout:hover{border-color:var(--danger);color:var(--danger)}
+    /* ══════════════ MAIN ══════════════ */
+    .main-inner{max-width:1360px;margin:0 auto;padding:1.5rem 1.2rem 3rem}
+    /* ══════════════ SUMMARY CARDS ══════════════ */
+    .summary-grid{
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
+      gap:.85rem;margin-bottom:1.3rem;
     }
-
-    .topbar-brand {
-      display: flex;
-      align-items: center;
-      gap: .6rem;
-      font-weight: 700;
-      font-size: 1rem;
+    .stat-card{
+      background:var(--card);border:1px solid var(--border);
+      border-radius:12px;padding:1rem 1.1rem;position:relative;overflow:hidden;
     }
-
-    .topbar-brand .dot {
-      width: 8px; height: 8px;
-      background: var(--accent2);
-      border-radius: 50%;
+    .stat-card::after{
+      content:'';position:absolute;top:0;left:0;right:0;height:3px;
+      background:linear-gradient(90deg,var(--accent),var(--a2));
     }
-
-    .user-pill {
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: .35rem .8rem;
-      font-size: .82rem;
-      font-weight: 600;
+    .stat-label{font-size:.68rem;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4rem}
+    .stat-value{font-size:1.45rem;font-weight:800;line-height:1}
+    .stat-value.g{color:var(--a2)}.stat-value.b{color:var(--accent)}.stat-value.w{color:var(--warn)}
+    .stat-sub{font-size:.7rem;color:var(--dim);margin-top:.3rem}
+    /* ══════════════ CONTROLS ══════════════ */
+    .controls-wrap{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:12px;padding:1rem 1.15rem;margin-bottom:1.2rem;
     }
-
-    .user-pill .avatar {
-      width: 24px; height: 24px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: .65rem; font-weight: 700; color: #fff;
+    .controls-row{display:flex;flex-wrap:wrap;gap:.65rem;align-items:flex-end}
+    .controls-row .field{margin:0;min-width:130px;flex:1}
+    .search-wrap{position:relative;flex:2;min-width:175px}
+    .search-wrap svg{
+      position:absolute;left:.7rem;top:50%;transform:translateY(-50%);
+      color:var(--sub);pointer-events:none;
     }
-
-    .btn-logout {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      border-radius: 8px;
-      padding: .35rem .8rem;
-      font-size: .8rem;
-      cursor: pointer;
-      transition: border-color .2s, color .2s;
+    .search-wrap input{padding-left:2.1rem}
+    .btn-apply{
+      background:linear-gradient(135deg,var(--accent),#3f6fe8);color:#fff;
+      border:none;border-radius:var(--radius);padding:.62rem 1.2rem;
+      font-size:.84rem;font-weight:700;cursor:pointer;white-space:nowrap;
+      transition:opacity .18s;flex-shrink:0;
     }
-
-    .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
-
-    .dashboard-inner {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 1.5rem 1.25rem 3rem;
+    .btn-apply:hover{opacity:.86}
+    .btn-reset{
+      background:transparent;border:1px solid var(--border);color:var(--sub);
+      border-radius:var(--radius);padding:.62rem 1rem;font-size:.84rem;
+      cursor:pointer;white-space:nowrap;transition:border-color .18s;flex-shrink:0;
     }
-
-    /* ── Summary Cards ── */
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.5rem;
+    .btn-reset:hover{border-color:var(--sub)}
+    .filter-check{display:flex;align-items:center;gap:.4rem;padding:.62rem 0}
+    .filter-check input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+    .filter-check label{margin:0;color:var(--text);font-size:.82rem;cursor:pointer;white-space:nowrap}
+    /* ══════════════ ANALYTICS (admin) ══════════════ */
+    .analytics-section{margin-bottom:1.2rem}
+    .analytics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.85rem}
+    .chart-card{
+      background:var(--card);border:1px solid var(--border);
+      border-radius:12px;padding:1rem 1.1rem;overflow:hidden;
     }
-
-    .stat-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.1rem 1.2rem;
-      position: relative;
-      overflow: hidden;
+    .chart-title{font-size:.78rem;font-weight:700;color:var(--sub);margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.05em}
+    .bar-list{display:flex;flex-direction:column;gap:.45rem}
+    .bar-item{}
+    .bar-label{font-size:.75rem;display:flex;justify-content:space-between;margin-bottom:.2rem}
+    .bar-label span:first-child{color:var(--text);font-weight:600}
+    .bar-label span:last-child{color:var(--sub);font-size:.7rem}
+    .bar-track{height:7px;background:var(--border);border-radius:99px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--a2));transition:width .35s}
+    /* ══════════════ TABLE ══════════════ */
+    .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .table-header{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:.8rem 1.15rem;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:.5rem;
     }
-
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    .table-title{font-size:.88rem;font-weight:800}
+    .table-meta{display:flex;align-items:center;gap:.75rem}
+    .record-count{font-size:.75rem;color:var(--sub)}
+    .btn-export{
+      background:transparent;border:1px solid var(--border);color:var(--sub);
+      border-radius:8px;padding:.28rem .75rem;font-size:.75rem;cursor:pointer;
+      transition:border-color .18s,color .18s;display:flex;align-items:center;gap:.3rem;
     }
-
-    .stat-label {
-      font-size: .72rem;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      margin-bottom: .45rem;
+    .btn-export:hover{border-color:var(--a2);color:var(--a2)}
+    .tbl-scroll{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:.8rem}
+    thead th{
+      background:var(--card);padding:.65rem .9rem;text-align:left;
+      color:var(--sub);font-size:.68rem;font-weight:700;text-transform:uppercase;
+      letter-spacing:.06em;white-space:nowrap;border-bottom:1px solid var(--border);
+      cursor:pointer;user-select:none;
     }
-
-    .stat-value {
-      font-size: 1.55rem;
-      font-weight: 800;
-      color: var(--text);
-      line-height: 1;
+    thead th:hover{color:var(--text)}
+    thead th .sort-icon{font-size:.7rem;margin-left:.3rem;opacity:.45}
+    thead th.sorted{color:var(--accent)}
+    thead th.sorted .sort-icon{opacity:1}
+    tbody tr{border-bottom:1px solid var(--border2);transition:background .12s}
+    tbody tr:last-child{border-bottom:none}
+    tbody tr:hover{background:rgba(91,141,246,.05)}
+    tbody tr.hl{background:rgba(91,141,246,.11)}
+    td{padding:.68rem .9rem;vertical-align:middle;white-space:nowrap}
+    .badge{display:inline-block;padding:.18rem .5rem;border-radius:99px;font-size:.68rem;font-weight:800}
+    .b-blue{background:rgba(91,141,246,.15);color:var(--accent)}
+    .b-green{background:rgba(52,212,168,.14);color:var(--a2)}
+    .b-warn{background:rgba(245,166,35,.14);color:var(--warn)}
+    .b-dim{background:rgba(74,82,120,.18);color:var(--dim)}
+    .b-red{background:rgba(224,92,114,.14);color:var(--danger)}
+    /* ══ PAGINATION ══ */
+    .pagination{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:.7rem 1.15rem;border-top:1px solid var(--border);flex-wrap:wrap;gap:.5rem;
     }
-
-    .stat-value.green { color: var(--accent2); }
-    .stat-value.blue  { color: var(--accent); }
-
-    .stat-sub {
-      font-size: .75rem;
-      color: var(--muted);
-      margin-top: .3rem;
+    .page-info{font-size:.75rem;color:var(--sub)}
+    .page-btns{display:flex;gap:.35rem}
+    .page-btn{
+      background:var(--card);border:1px solid var(--border);color:var(--text);
+      border-radius:7px;padding:.3rem .6rem;font-size:.78rem;cursor:pointer;
+      min-width:32px;text-align:center;transition:border-color .15s;
     }
-
-    /* ── Controls Bar ── */
-    .controls-bar {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1rem 1.2rem;
-      margin-bottom: 1.25rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: .75rem;
-      align-items: flex-end;
+    .page-btn:hover{border-color:var(--accent)}
+    .page-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+    .page-btn:disabled{opacity:.35;cursor:not-allowed}
+    /* ══ EMPTY / LOADING ══ */
+    .state-box{text-align:center;padding:3rem 1rem}
+    .state-box svg{color:var(--border);margin-bottom:.75rem}
+    .state-box p{color:var(--sub);font-size:.88rem}
+    .spinner{width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .65s linear infinite;margin:0 auto .75rem}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    /* ══ RESPONSIVE ══ */
+    @media(max-width:700px){
+      .topbar{padding:.65rem 1rem}
+      .main-inner{padding:1rem .8rem 2.5rem}
+      .summary-grid{grid-template-columns:1fr 1fr}
+      .stat-value{font-size:1.2rem}
+      .analytics-grid{grid-template-columns:1fr}
     }
-
-    .controls-bar .field {
-      margin: 0;
-      min-width: 150px;
-      flex: 1;
-    }
-
-    .btn-apply {
-      background: linear-gradient(135deg, var(--accent), #3a7bff);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      padding: .65rem 1.3rem;
-      font-size: .87rem;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: opacity .2s;
-    }
-
-    .btn-apply:hover { opacity: .87; }
-
-    .btn-reset {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      border-radius: var(--radius);
-      padding: .65rem 1rem;
-      font-size: .87rem;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: border-color .2s;
-    }
-
-    .btn-reset:hover { border-color: var(--muted); }
-
-    .search-wrap {
-      position: relative;
-      flex: 2;
-      min-width: 180px;
-    }
-
-    .search-wrap svg {
-      position: absolute;
-      left: .7rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--muted);
-      pointer-events: none;
-    }
-
-    .search-wrap input {
-      padding-left: 2.1rem;
-    }
-
-    /* ── Filter badges ── */
-    .filter-toggle {
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-    }
-
-    .filter-toggle label {
-      margin: 0;
-      cursor: pointer;
-      user-select: none;
-      display: flex;
-      align-items: center;
-      gap: .35rem;
-      color: var(--text);
-      font-size: .83rem;
-    }
-
-    input[type="checkbox"] {
-      accent-color: var(--accent);
-      width: 15px;
-      height: 15px;
-      cursor: pointer;
-    }
-
-    /* ── Table ── */
-    .table-wrap {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .table-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: .85rem 1.2rem;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .table-title {
-      font-size: .9rem;
-      font-weight: 700;
-    }
-
-    .record-count {
-      font-size: .78rem;
-      color: var(--muted);
-    }
-
-    .table-scroll { overflow-x: auto; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: .83rem;
-    }
-
-    thead th {
-      background: var(--card);
-      padding: .7rem 1rem;
-      text-align: left;
-      color: var(--muted);
-      font-size: .72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      white-space: nowrap;
-      border-bottom: 1px solid var(--border);
-    }
-
-    tbody tr {
-      border-bottom: 1px solid var(--border);
-      transition: background .15s;
-    }
-
-    tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: rgba(79,142,255,.05); }
-
-    tbody tr.highlight { background: rgba(79,142,255,.13); }
-
-    td {
-      padding: .75rem 1rem;
-      white-space: nowrap;
-      vertical-align: middle;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: .2rem .55rem;
-      border-radius: 99px;
-      font-size: .72rem;
-      font-weight: 700;
-    }
-
-    .badge-green { background: rgba(54,207,174,.15); color: var(--accent2); }
-    .badge-blue  { background: rgba(79,142,255,.15); color: var(--accent); }
-    .badge-dim   { background: rgba(120,128,164,.12); color: var(--muted); }
-
-    /* ── Empty / Loading ── */
-    .state-box {
-      text-align: center;
-      padding: 3rem 1rem;
-    }
-
-    .state-box svg {
-      color: var(--border);
-      margin-bottom: .75rem;
-    }
-
-    .state-box p {
-      color: var(--muted);
-      font-size: .9rem;
-    }
-
-    /* ── Spinner ── */
-    .spinner {
-      width: 28px; height: 28px;
-      border: 3px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-      margin: 0 auto .75rem;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Responsive ── */
-    @media (max-width: 600px) {
-      .topbar { padding: .7rem 1rem; }
-      .dashboard-inner { padding: 1rem .75rem 2rem; }
-      .summary-grid { grid-template-columns: 1fr 1fr; }
-      .stat-value { font-size: 1.25rem; }
-    }
-
-    @media (max-width: 400px) {
-      .summary-grid { grid-template-columns: 1fr; }
-    }
-
-    /* ── Search highlight ── */
-    mark {
-      background: rgba(79,142,255,.32);
-      color: inherit;
-      border-radius: 3px;
-      padding: 0 2px;
-    }
+    @media(max-width:420px){.summary-grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
 
-<!-- ════════════ LOGIN PAGE ════════════ -->
+<!-- ══════════════════ LOGIN ══════════════════ -->
 <div id="login-page">
   <div class="login-box">
     <div class="login-logo">
       <div class="mark">
-        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
         </svg>
@@ -488,479 +242,752 @@
       <h1>Referral Portal</h1>
       <p>Sign in to view your account</p>
     </div>
-
     <div id="login-error" class="error-msg"></div>
-
     <div class="field">
-      <label for="inp-name">Referral Person Name</label>
-      <input id="inp-name" type="text" placeholder="Your name" autocomplete="username" />
+      <label for="inp-name">Name / Username</label>
+      <input id="inp-name" type="text" placeholder="Your name" autocomplete="username"/>
     </div>
-
     <div class="field">
       <label for="inp-pass">Password</label>
-      <input id="inp-pass" type="password" placeholder="••••••" autocomplete="current-password" />
+      <input id="inp-pass" type="password" placeholder="••••••" autocomplete="current-password"/>
     </div>
-
-    <button id="btn-login" class="btn">Sign In</button>
+    <button id="btn-login" class="btn-primary">Sign In</button>
   </div>
 </div>
 
-<!-- ════════════ DASHBOARD PAGE ════════════ -->
-<div id="dashboard-page">
-
-  <!-- Top Bar -->
+<!-- ══════════════════ APP SHELL ══════════════════ -->
+<div id="app-page">
+  <!-- TOP BAR -->
   <div class="topbar">
-    <div class="topbar-brand">
-      <div class="dot"></div>
-      Referral Portal
-    </div>
-    <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
+    <div class="topbar-brand"><div class="live"></div>Referral Portal</div>
+    <div style="display:flex;align-items:center;gap:.65rem;flex-wrap:wrap">
       <div class="user-pill">
         <div class="avatar" id="user-avatar"></div>
         <span id="user-name-label">User</span>
+        <span id="admin-badge" class="admin-badge hidden">ADMIN</span>
       </div>
       <button class="btn-logout" id="btn-logout">Sign out</button>
     </div>
   </div>
 
-  <div class="dashboard-inner">
+  <div class="main-inner">
 
-    <!-- Summary Cards -->
-    <div class="summary-grid">
+    <!-- SUMMARY CARDS -->
+    <div class="summary-grid" id="summary-grid">
       <div class="stat-card">
         <div class="stat-label">Total Patients</div>
-        <div class="stat-value" id="s-patients">0</div>
+        <div class="stat-value b" id="s-patients">0</div>
         <div class="stat-sub">in selected period</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Total Business</div>
-        <div class="stat-value green" id="s-business">৳0</div>
+        <div class="stat-value g" id="s-business">৳0</div>
         <div class="stat-sub">total business amount</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Commission Received</div>
-        <div class="stat-value blue" id="s-commission">৳0</div>
-        <div class="stat-sub">referral commission total</div>
+        <div class="stat-label">Bill Received</div>
+        <div class="stat-value" id="s-bill">৳0</div>
+        <div class="stat-sub">total bill received</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Commission</div>
+        <div class="stat-value g" id="s-commission">৳0</div>
+        <div class="stat-sub">referral commission</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Commission Rate</div>
         <div class="stat-value" id="s-rate">—</div>
-        <div class="stat-sub">your commission %</div>
+        <div class="stat-sub">your rate</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Admin Share</div>
-        <div class="stat-value" id="s-admin">৳0</div>
-        <div class="stat-sub">admin received amount</div>
+        <div class="stat-value w" id="s-admin">৳0</div>
+        <div class="stat-sub">admin received</div>
+      </div>
+      <!-- Admin-only extras -->
+      <div class="stat-card hidden" id="sc-users">
+        <div class="stat-label">Active Referrers</div>
+        <div class="stat-value b" id="s-users">0</div>
+        <div class="stat-sub">unique referral persons</div>
       </div>
     </div>
 
-    <!-- Controls -->
-    <div class="controls-bar">
-      <!-- Date From -->
-      <div class="field">
-        <label for="f-from">From Date</label>
-        <input type="date" id="f-from" />
+    <!-- ADMIN ANALYTICS -->
+    <div class="analytics-section hidden" id="analytics-section">
+      <div class="analytics-grid">
+        <div class="chart-card" id="chart-business"><div class="chart-title">Business by Referral Person</div><div class="bar-list" id="bars-business"></div></div>
+        <div class="chart-card" id="chart-commission"><div class="chart-title">Commission by Referral Person</div><div class="bar-list" id="bars-commission"></div></div>
+        <div class="chart-card" id="chart-patients"><div class="chart-title">Patients by Referral Person</div><div class="bar-list" id="bars-patients"></div></div>
       </div>
-      <!-- Date To -->
-      <div class="field">
-        <label for="f-to">To Date</label>
-        <input type="date" id="f-to" />
-      </div>
-      <!-- Bill Received filter -->
-      <div class="field" style="flex:0 0 auto;min-width:auto;">
-        <label>&nbsp;</label>
-        <div class="filter-toggle" style="padding:.65rem 0;">
-          <label>
-            <input type="checkbox" id="f-bill-zero" />
-            Bill Received = 0 only
-          </label>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls-wrap">
+      <div class="controls-row">
+        <!-- Admin-only filters -->
+        <div class="field hidden" id="f-referrer-wrap">
+          <label for="f-referrer">Referral Person</label>
+          <select id="f-referrer"><option value="">All Referral Persons</option></select>
         </div>
+        <!-- Date range -->
+        <div class="field">
+          <label for="f-from">From Date</label>
+          <input type="date" id="f-from"/>
+        </div>
+        <div class="field">
+          <label for="f-to">To Date</label>
+          <input type="date" id="f-to"/>
+        </div>
+        <!-- Bill = 0 checkbox -->
+        <div class="field" style="flex:0 0 auto;min-width:auto">
+          <label>&nbsp;</label>
+          <div class="filter-check">
+            <input type="checkbox" id="f-bill-zero"/>
+            <label for="f-bill-zero">Bill Received = 0</label>
+          </div>
+        </div>
+        <!-- Search -->
+        <div class="search-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="search" id="f-search" placeholder="Search patients, location…"/>
+        </div>
+        <button class="btn-apply" id="btn-apply">Apply</button>
+        <button class="btn-reset" id="btn-reset">Reset</button>
       </div>
-      <!-- Search -->
-      <div class="search-wrap">
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-        <input type="search" id="f-search" placeholder="Search patients, location…" />
-      </div>
-      <!-- Buttons -->
-      <button class="btn-apply" id="btn-apply">Apply Filters</button>
-      <button class="btn-reset" id="btn-reset">Reset</button>
     </div>
 
-    <!-- Table -->
+    <!-- TABLE -->
     <div class="table-wrap">
       <div class="table-header">
         <span class="table-title">Patient Records</span>
-        <span class="record-count" id="record-count">0 records</span>
+        <div class="table-meta">
+          <span class="record-count" id="record-count">0 records</span>
+          <button class="btn-export hidden" id="btn-export">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
+          </button>
+        </div>
       </div>
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Serial</th>
-              <th>Patient Name</th>
-              <th>Phone</th>
-              <th>Location</th>
-              <th>Bill Date</th>
-              <th>Payment</th>
-              <th>Bill Received</th>
-              <th>Bill Due</th>
-              <th>Total Business</th>
-              <th>Admin Received</th>
-              <th>Commission</th>
-              <th>Match Person</th>
-              <th>Total Match</th>
-            </tr>
-          </thead>
-          <tbody id="table-body">
-          </tbody>
-        </table>
+
+      <!-- Loading state -->
+      <div id="tbl-loading" class="state-box">
+        <div class="spinner"></div>
+        <p>Loading…</p>
       </div>
-      <div id="table-empty" class="state-box" style="display:none;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10"/><path d="M8 15h8M9 9h.01M15 9h.01"/>
-        </svg>
-        <p>No records match the current filters.</p>
+
+      <div id="tbl-data-wrap" class="hidden">
+        <div class="tbl-scroll">
+          <table id="main-table">
+            <thead id="table-head"></thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+        <div id="tbl-empty" class="state-box hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 15h8M9 9h.01M15 9h.01"/></svg>
+          <p>No records match the current filters.</p>
+        </div>
+        <div class="pagination" id="pagination" style="display:none"></div>
       </div>
     </div>
 
-  </div>
-</div>
+  </div><!-- /main-inner -->
+</div><!-- /app-page -->
 
-<!-- ════════════ SCRIPT ════════════ -->
 <script>
-  /* ── Config ── */
-  const WEBHOOK_URL = 'https://n8n.doitfastit.com/webhook/verify-referral';
+/* ══════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════ */
+const WEBHOOK = 'https://n8n.doitfastit.com/webhook/verify-referral';
+const PAGE_SIZE = 50;
 
-  /* ── State ── */
-  let allRecords = [];    // raw from API
-  let currentRecords = []; // after filters
-  let commissionRate = '';
-  let userName = '';
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+let state = {
+  isAdmin: false,
+  userName: '',
+  commissionRate: '—',
+  allRecords: [],       // raw from API
+  filtered: [],         // after all filters
+  sorted: [],           // after sort
+  sortCol: 'Bill Received Date',
+  sortDir: 'desc',
+  page: 1,
+};
 
-  /* ── DOM refs ── */
-  const loginPage   = document.getElementById('login-page');
-  const dashPage    = document.getElementById('dashboard-page');
-  const loginError  = document.getElementById('login-error');
-  const btnLogin    = document.getElementById('btn-login');
-  const inpName     = document.getElementById('inp-name');
-  const inpPass     = document.getElementById('inp-pass');
-  const btnLogout   = document.getElementById('btn-logout');
-  const fFrom       = document.getElementById('f-from');
-  const fTo         = document.getElementById('f-to');
-  const fBillZero   = document.getElementById('f-bill-zero');
-  const fSearch     = document.getElementById('f-search');
-  const btnApply    = document.getElementById('btn-apply');
-  const btnReset    = document.getElementById('btn-reset');
-  const tableBody   = document.getElementById('table-body');
-  const tableEmpty  = document.getElementById('table-empty');
-  const recordCount = document.getElementById('record-count');
+/* ══════════════════════════════════════════
+   DOM
+══════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const loginPage   = $('login-page');
+const appPage     = $('app-page');
+const loginError  = $('login-error');
+const btnLogin    = $('btn-login');
+const inpName     = $('inp-name');
+const inpPass     = $('inp-pass');
+const btnLogout   = $('btn-logout');
+const fReferrer   = $('f-referrer');
+const fFrom       = $('f-from');
+const fTo         = $('f-to');
+const fBillZero   = $('f-bill-zero');
+const fSearch     = $('f-search');
+const btnApply    = $('btn-apply');
+const btnReset    = $('btn-reset');
+const tableHead   = $('table-head');
+const tableBody   = $('table-body');
+const tblLoading  = $('tbl-loading');
+const tblDataWrap = $('tbl-data-wrap');
+const tblEmpty    = $('tbl-empty');
+const pagination  = $('pagination');
+const recordCount = $('record-count');
+const btnExport   = $('btn-export');
 
-  /* ── Helpers ── */
-  const fmt = n => {
-    const num = parseFloat(n) || 0;
-    return '৳' + num.toLocaleString('en-IN', { minimumFractionDigits: 0 });
-  };
+/* ══════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════ */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-  const fmtDate = s => {
-    if (!s) return '—';
-    const d = new Date(s);
-    return isNaN(d) ? s : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  };
+const hl = (text, q) => {
+  if (!q) return esc(text);
+  return esc(String(text ?? '')).replace(
+    new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi'),
+    '<mark>$1</mark>');
+};
 
-  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtMoney = n => {
+  const v = parseFloat(n) || 0;
+  return '৳' + v.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+};
 
-  function highlight(text, query) {
-    if (!query) return esc(text);
-    const re = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
-    return esc(String(text ?? '')).replace(re, '<mark>$1</mark>');
-  }
+const fmtDate = s => {
+  if (!s) return '—';
+  const d = new Date(s);
+  return isNaN(d) ? s : d.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
+};
 
-  function showError(msg) {
-    loginError.textContent = msg;
-    loginError.classList.add('show');
-  }
+const num = v => parseFloat(v) || 0;
 
-  function clearError() {
-    loginError.classList.remove('show');
-  }
+function showError(msg) { loginError.textContent = msg; loginError.classList.add('show'); }
+function clearError()   { loginError.classList.remove('show'); }
 
-  /* ── Login ── */
-  async function doLogin() {
-    clearError();
-    const name = inpName.value.trim();
-    const pass = inpPass.value.trim();
+/* ══════════════════════════════════════════
+   COLUMN DEFINITIONS
+══════════════════════════════════════════ */
+const USER_COLS = [
+  {key:'#',         label:'#',               type:'idx'},
+  {key:'Serial',    label:'Serial',           type:'num'},
+  {key:'Patient Name',      label:'Patient',  type:'str'},
+  {key:'Patient Phone Number', label:'Phone', type:'str'},
+  {key:'Location',  label:'Location',         type:'str'},
+  {key:'Bill Received Date', label:'Date',    type:'date'},
+  {key:'Payment',   label:'Payment',          type:'money'},
+  {key:'Bill Received Amount', label:'Bill Rcvd', type:'money'},
+  {key:'Bill Received Due',    label:'Bill Due',  type:'money'},
+  {key:'Total Business Amount', label:'Business', type:'money'},
+  {key:'Admin Received Amount', label:'Admin Rcvd', type:'money'},
+  {key:'Referral Commission',   label:'Commission', type:'money'},
+  {key:'Match Person Name', label:'Match Person', type:'str'},
+  {key:'Total Match',       label:'Matches',     type:'str'},
+];
 
-    if (!name || !pass) {
-      showError('Please enter your name and password.');
-      return;
-    }
+const ADMIN_COLS = [
+  {key:'#',         label:'#',               type:'idx'},
+  {key:'Serial',    label:'Serial',           type:'num'},
+  {key:'Referral Person', label:'Referrer',   type:'str'},
+  {key:'Commission Rate', label:'Comm. Rate', type:'str'},
+  {key:'Patient Name',    label:'Patient',    type:'str'},
+  {key:'Patient Phone Number', label:'Phone', type:'str'},
+  {key:'Location',        label:'Location',   type:'str'},
+  {key:'Bill Received Date', label:'Date',    type:'date'},
+  {key:'Payment',         label:'Payment',    type:'money'},
+  {key:'Bill Received Amount', label:'Bill Rcvd', type:'money'},
+  {key:'Bill Received Due',    label:'Bill Due',  type:'money'},
+  {key:'Total Business Amount', label:'Business', type:'money'},
+  {key:'Admin Received Amount', label:'Admin Rcvd', type:'money'},
+  {key:'Referral Commission',   label:'Commission', type:'money'},
+  {key:'Match Person Name', label:'Match Person', type:'str'},
+  {key:'Total Match',       label:'Matches',     type:'str'},
+];
 
-    btnLogin.disabled = true;
-    btnLogin.textContent = 'Signing in…';
+/* ══════════════════════════════════════════
+   LOGIN
+══════════════════════════════════════════ */
+async function doLogin() {
+  clearError();
+  const name = inpName.value.trim();
+  const pass = inpPass.value.trim();
+  if (!name || !pass) { showError('Please enter your name and password.'); return; }
 
-    try {
-      const res = await fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ name, password: pass })
-      });
+  btnLogin.disabled = true;
+  btnLogin.textContent = 'Signing in…';
 
-      // Read body as text first so we can inspect it regardless of content-type
-      const rawText = await res.text().catch(() => '');
-
-      // Non-2xx without parseable JSON → auth failure
-      if (!res.ok) {
-        try {
-          const errJson = JSON.parse(rawText);
-          showError(errJson.message || 'Incorrect name or password. Please try again.');
-        } catch {
-          showError('Incorrect name or password. Please try again.');
-        }
-        return;
-      }
-
-      let data;
-      try {
-        data = JSON.parse(rawText);
-      } catch {
-        showError('Unexpected response from server. Please try again.');
-        return;
-      }
-
-      /*
-       * The n8n automation can return:
-       *  (a) Array of patient record objects  — success
-       *  (b) Single patient record object     — success (1 record)
-       *  (c) { success: false, message: "…" } — auth failure from Respond Password Fail node
-       *  (d) { success: true, months: […] }   — should not happen on this endpoint, guard anyway
-       */
-      if (Array.isArray(data)) {
-        if (data.length === 0) {
-          showError('No records found for this account. Please contact admin.');
-          return;
-        }
-        const first = data[0];
-        // Auth failure wrapped in array
-        if (first && first.success === false) {
-          showError(first.message || 'Incorrect name or password. Please try again.');
-          return;
-        }
-        allRecords = data;
-
-      } else if (data && typeof data === 'object') {
-        // Explicit failure object
-        if (data.success === false) {
-          showError(data.message || 'Incorrect name or password. Please try again.');
-          return;
-        }
-        // Unexpected shape (e.g. months list)
-        if (data.months !== undefined) {
-          showError('Authentication succeeded but no patient records were returned.');
-          return;
-        }
-        // Single record object
-        allRecords = [data];
-
-      } else {
-        showError('Unexpected server response. Please try again.');
-        return;
-      }
-
-      // Only patient records have 'Patient Name'; do a sanity check
-      if (!allRecords[0]?.['Patient Name'] && !allRecords[0]?.['Referral Person']) {
-        showError('Incorrect name or password. Please try again.');
-        return;
-      }
-
-      // Extract commission rate (stored as decimal 0–1 in the sheet, displayed as %)
-      const rawRate = allRecords[0]?.['Commission Rate'];
-      if (rawRate !== undefined && rawRate !== null && rawRate !== '') {
-        const r = parseFloat(rawRate);
-        commissionRate = isNaN(r) ? String(rawRate) : ((r <= 1 ? r * 100 : r).toFixed(0) + '%');
-      } else {
-        commissionRate = '—';
-      }
-      userName = name;
-
-      // Boot dashboard
-      bootDashboard();
-
-    } catch (err) {
-      console.error(err);
-      showError('Network error. Please check your connection and try again.');
-    } finally {
-      btnLogin.disabled = false;
-      btnLogin.textContent = 'Sign In';
-    }
-  }
-
-  /* ── Dashboard Bootstrap ── */
-  function bootDashboard() {
-    // Set user info
-    document.getElementById('user-name-label').textContent = userName;
-    document.getElementById('user-avatar').textContent = userName.charAt(0).toUpperCase();
-
-    // Default date range: this month
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    fFrom.value = `${y}-${m}-01`;
-    const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
-    fTo.value = `${y}-${m}-${lastDay}`;
-
-    // Show dashboard
-    loginPage.style.display = 'none';
-    dashPage.style.display = 'block';
-
-    applyFilters();
-  }
-
-  /* ── Filters & Rendering ── */
-  function applyFilters() {
-    const from   = fFrom.value ? new Date(fFrom.value) : null;
-    const to     = fTo.value   ? new Date(fTo.value + 'T23:59:59') : null;
-    const billZ  = fBillZero.checked;
-    const query  = fSearch.value.trim().toLowerCase();
-
-    currentRecords = allRecords.filter(r => {
-      // Date filter on Bill Received Date
-      if (from || to) {
-        const d = r['Bill Received Date'] ? new Date(r['Bill Received Date']) : null;
-        if (!d) return false;
-        if (from && d < from) return false;
-        if (to   && d > to)   return false;
-      }
-
-      // Bill Received Amount = 0 filter
-      if (billZ) {
-        const amt = parseFloat(r['Bill Received Amount'] ?? r['Bill Received Due'] ?? 0);
-        if (amt !== 0) return false;
-      }
-
-      // Search filter
-      if (query) {
-        const searchable = [
-          r['Patient Name'], r['Location'], r['Patient Phone Number'],
-          r['Match Person Name'], r['Serial'], r['Bill Received Date']
-        ].map(v => String(v ?? '').toLowerCase()).join(' ');
-        if (!searchable.includes(query)) return false;
-      }
-
-      return true;
+  try {
+    const res = await fetch(WEBHOOK, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Accept':'application/json'},
+      body: JSON.stringify({name, password: pass}),
     });
 
-    renderSummary();
-    renderTable(query);
-  }
+    const raw = await res.text().catch(() => '');
 
-  function renderSummary() {
-    const total      = currentRecords.length;
-    const business   = currentRecords.reduce((a, r) => a + (parseFloat(r['Total Business Amount']) || 0), 0);
-    const commission = currentRecords.reduce((a, r) => a + (parseFloat(r['Referral Commission']) || 0), 0);
-    const admin      = currentRecords.reduce((a, r) => a + (parseFloat(r['Admin Received Amount']) || 0), 0);
-
-    document.getElementById('s-patients').textContent   = total.toLocaleString();
-    document.getElementById('s-business').textContent   = fmt(business);
-    document.getElementById('s-commission').textContent = fmt(commission);
-    document.getElementById('s-rate').textContent       = commissionRate || '—';
-    document.getElementById('s-admin').textContent      = fmt(admin);
-  }
-
-  function renderTable(query = '') {
-    if (currentRecords.length === 0) {
-      tableBody.innerHTML = '';
-      tableEmpty.style.display = 'block';
-      recordCount.textContent = '0 records';
+    if (!res.ok) {
+      try { const e = JSON.parse(raw); showError(e.message || 'Incorrect credentials.'); }
+      catch { showError('Incorrect name or password. Please try again.'); }
       return;
     }
 
-    tableEmpty.style.display = 'none';
-    recordCount.textContent = currentRecords.length.toLocaleString() + ' record' + (currentRecords.length !== 1 ? 's' : '');
+    let data;
+    try { data = JSON.parse(raw); }
+    catch { showError('Unexpected server response. Please try again.'); return; }
 
-    // Build rows
-    const rows = currentRecords.map((r, i) => {
-      const billAmt  = parseFloat(r['Bill Received Amount'] ?? 0);
-      const billDue  = parseFloat(r['Bill Received Due'] ?? 0);
-      const totalM   = r['Total Match'];
-      const matchBadge = totalM && String(totalM).trim() !== '' && totalM !== '0'
-        ? `<span class="badge badge-green">${esc(totalM)}</span>`
-        : `<span class="badge badge-dim">—</span>`;
+    /* Normalise: always work with an array */
+    let records = Array.isArray(data) ? data : [data];
 
-      return `
-        <tr data-idx="${i}">
-          <td style="color:var(--muted);">${i + 1}</td>
-          <td><span class="badge badge-blue">${esc(r['Serial'] ?? '—')}</span></td>
-          <td style="font-weight:600;">${highlight(r['Patient Name'], query)}</td>
-          <td style="color:var(--muted);">${highlight(r['Patient Phone Number'], query)}</td>
-          <td>${highlight(r['Location'], query)}</td>
-          <td>${fmtDate(r['Bill Received Date'])}</td>
-          <td>${fmt(r['Payment'])}</td>
-          <td>${billAmt === 0 ? '<span style="color:var(--danger);">৳0</span>' : fmt(billAmt)}</td>
-          <td>${billDue > 0 ? `<span style="color:var(--danger);">${fmt(billDue)}</span>` : '<span style="color:var(--muted);">—</span>'}</td>
-          <td style="font-weight:600;">${fmt(r['Total Business Amount'])}</td>
-          <td>${fmt(r['Admin Received Amount'])}</td>
-          <td style="color:var(--accent2);font-weight:600;">${fmt(r['Referral Commission'])}</td>
-          <td>${highlight(r['Match Person Name'], query)}</td>
-          <td>${matchBadge}</td>
-        </tr>`;
-    }).join('');
-
-    tableBody.innerHTML = rows;
-
-    // Scroll to first highlighted row if search active
-    if (query) {
-      const firstMatch = tableBody.querySelector('tr');
-      if (firstMatch) {
-        firstMatch.classList.add('highlight');
-        firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+    /* Auth failure from automation */
+    if (records[0]?.success === false) {
+      showError(records[0].message || 'Incorrect name or password. Please try again.');
+      return;
     }
+
+    /* Sanity: must have patient-like records */
+    if (!records[0]?.['Patient Name'] && !records[0]?.['Referral Person']) {
+      showError('Incorrect name or password. Please try again.');
+      return;
+    }
+
+    /* Determine account type from backend data:
+       Admin records include multiple different Referral Persons
+       OR the automation itself routed through the admin path.
+       The automation decides — we detect it by checking if
+       records contain multiple distinct Referral Persons OR
+       if the name sent was 'admin' (the automation enforces this anyway). */
+    const uniqueReferrers = new Set(records.map(r => r['Referral Person']).filter(Boolean));
+    const isAdmin = uniqueReferrers.size > 1 ||
+                    (uniqueReferrers.size >= 1 && name.toLowerCase() === 'admin');
+
+    state.isAdmin = isAdmin;
+    state.userName = name;
+    state.allRecords = records;
+
+    /* Commission rate for non-admin (single user) */
+    if (!isAdmin && records[0]?.['Commission Rate'] !== undefined) {
+      const rr = records[0]['Commission Rate'];
+      if (typeof rr === 'string' && rr.includes('%')) {
+        state.commissionRate = rr;
+      } else {
+        const rv = parseFloat(rr);
+        state.commissionRate = isNaN(rv) ? String(rr)
+          : ((rv <= 1 ? rv * 100 : rv).toFixed(0) + '%');
+      }
+    } else {
+      state.commissionRate = '—';
+    }
+
+    bootApp();
+
+  } catch(err) {
+    console.error(err);
+    showError('Network error. Check your connection and try again.');
+  } finally {
+    btnLogin.disabled = false;
+    btnLogin.textContent = 'Sign In';
+  }
+}
+
+/* ══════════════════════════════════════════
+   BOOT DASHBOARD
+══════════════════════════════════════════ */
+function bootApp() {
+  /* User info */
+  $('user-name-label').textContent = state.userName;
+  $('user-avatar').textContent = state.userName.charAt(0).toUpperCase();
+  $('admin-badge').classList.toggle('hidden', !state.isAdmin);
+
+  /* Show/hide admin controls */
+  $('f-referrer-wrap').classList.toggle('hidden', !state.isAdmin);
+  $('analytics-section').classList.toggle('hidden', !state.isAdmin);
+  $('sc-users').classList.toggle('hidden', !state.isAdmin);
+  btnExport.classList.toggle('hidden', !state.isAdmin);
+
+  /* Build referrer dropdown (admin) */
+  if (state.isAdmin) {
+    const persons = [...new Set(state.allRecords.map(r => r['Referral Person']).filter(Boolean))].sort();
+    fReferrer.innerHTML = '<option value="">All Referral Persons</option>' +
+      persons.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
   }
 
-  /* ── Logout ── */
-  function doLogout() {
-    allRecords = [];
-    currentRecords = [];
-    commissionRate = '';
-    userName = '';
-    inpName.value = '';
-    inpPass.value = '';
-    fSearch.value = '';
-    fFrom.value = '';
-    fTo.value = '';
-    fBillZero.checked = false;
+  /* Build table header */
+  buildTableHead();
+
+  /* Default date range: this month */
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
+  fFrom.value = `${y}-${m}-01`;
+  fTo.value   = `${y}-${m}-${new Date(y, now.getMonth()+1, 0).getDate()}`;
+
+  /* Show app */
+  loginPage.style.display = 'none';
+  appPage.style.display = 'block';
+  tblLoading.classList.add('hidden');
+  tblDataWrap.classList.remove('hidden');
+
+  applyFilters();
+}
+
+/* ══════════════════════════════════════════
+   TABLE HEAD
+══════════════════════════════════════════ */
+function buildTableHead() {
+  const cols = state.isAdmin ? ADMIN_COLS : USER_COLS;
+  tableHead.innerHTML = '<tr>' + cols.map(c => {
+    if (c.key === '#') return '<th>#</th>';
+    const sorted = state.sortCol === c.key;
+    const icon   = sorted ? (state.sortDir === 'asc' ? '▲' : '▼') : '⇅';
+    return `<th class="${sorted?'sorted':''}" data-col="${esc(c.key)}" title="Sort by ${esc(c.label)}">
+      ${esc(c.label)}<span class="sort-icon">${icon}</span>
+    </th>`;
+  }).join('') + '</tr>';
+
+  tableHead.querySelectorAll('th[data-col]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (state.sortCol === col) state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+      else { state.sortCol = col; state.sortDir = 'asc'; }
+      state.page = 1;
+      buildTableHead();
+      sortAndRender();
+    });
+  });
+}
+
+/* ══════════════════════════════════════════
+   APPLY FILTERS
+══════════════════════════════════════════ */
+function applyFilters() {
+  const referrer = state.isAdmin ? fReferrer.value : '';
+  const from     = fFrom.value ? new Date(fFrom.value) : null;
+  const to       = fTo.value   ? new Date(fTo.value + 'T23:59:59') : null;
+  const billZ    = fBillZero.checked;
+  const query    = fSearch.value.trim().toLowerCase();
+
+  state.filtered = state.allRecords.filter(r => {
+    /* Referrer filter (admin) */
+    if (referrer && r['Referral Person'] !== referrer) return false;
+
+    /* Date filter on Bill Received Date */
+    if (from || to) {
+      const d = r['Bill Received Date'] ? new Date(r['Bill Received Date']) : null;
+      if (!d || isNaN(d)) return false;
+      if (from && d < from) return false;
+      if (to   && d > to)   return false;
+    }
+
+    /* Bill Received Amount = 0 */
+    if (billZ && (num(r['Bill Received Amount']) !== 0)) return false;
+
+    /* Full-text search */
+    if (query) {
+      const hay = [
+        r['Patient Name'], r['Referral Person'], r['Location'],
+        r['Patient Phone Number'], r['Match Person Name'],
+        r['Serial'], r['Bill Received Date'], r['Patient Serial Date'],
+        r['Commission Rate']
+      ].map(v => String(v ?? '').toLowerCase()).join(' ');
+      if (!hay.includes(query)) return false;
+    }
+
+    return true;
+  });
+
+  state.page = 1;
+  renderSummary();
+  renderAnalytics();
+  sortAndRender();
+}
+
+/* ══════════════════════════════════════════
+   SUMMARY
+══════════════════════════════════════════ */
+function renderSummary() {
+  const recs = state.filtered;
+  const total    = recs.length;
+  const business = recs.reduce((a,r) => a + num(r['Total Business Amount']), 0);
+  const bill     = recs.reduce((a,r) => a + num(r['Bill Received Amount']), 0);
+  const comm     = recs.reduce((a,r) => a + num(r['Referral Commission']), 0);
+  const admin    = recs.reduce((a,r) => a + num(r['Admin Received Amount']), 0);
+
+  $('s-patients').textContent  = total.toLocaleString();
+  $('s-business').textContent  = fmtMoney(business);
+  $('s-bill').textContent      = fmtMoney(bill);
+  $('s-commission').textContent= fmtMoney(comm);
+  $('s-rate').textContent      = state.isAdmin ? '—' : state.commissionRate;
+  $('s-admin').textContent     = fmtMoney(admin);
+
+  if (state.isAdmin) {
+    const users = new Set(recs.map(r => r['Referral Person']).filter(Boolean)).size;
+    $('s-users').textContent = users;
+  }
+}
+
+/* ══════════════════════════════════════════
+   ANALYTICS (admin only)
+══════════════════════════════════════════ */
+function renderAnalytics() {
+  if (!state.isAdmin) return;
+  const recs = state.filtered;
+
+  /* Group by Referral Person */
+  const byPerson = {};
+  recs.forEach(r => {
+    const p = r['Referral Person'] || 'Unknown';
+    if (!byPerson[p]) byPerson[p] = {business:0, commission:0, patients:0};
+    byPerson[p].business   += num(r['Total Business Amount']);
+    byPerson[p].commission += num(r['Referral Commission']);
+    byPerson[p].patients   += 1;
+  });
+
+  renderBars('bars-business', byPerson, 'business', fmtMoney);
+  renderBars('bars-commission', byPerson, 'commission', fmtMoney);
+  renderBars('bars-patients', byPerson, 'patients', v => v);
+}
+
+function renderBars(containerId, data, metric, fmt) {
+  const container = $(containerId);
+  const entries = Object.entries(data).sort((a,b) => b[1][metric] - a[1][metric]).slice(0,8);
+  if (!entries.length) { container.innerHTML = '<p style="color:var(--dim);font-size:.75rem">No data</p>'; return; }
+  const max = entries[0][1][metric] || 1;
+  container.innerHTML = entries.map(([person, d]) => {
+    const pct = Math.round((d[metric] / max) * 100);
+    return `<div class="bar-item">
+      <div class="bar-label"><span>${esc(person)}</span><span>${esc(fmt(d[metric]))}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════
+   SORT + RENDER
+══════════════════════════════════════════ */
+function sortAndRender() {
+  const col = state.sortCol;
+  const dir = state.sortDir === 'asc' ? 1 : -1;
+  const cols = state.isAdmin ? ADMIN_COLS : USER_COLS;
+  const colDef = cols.find(c => c.key === col);
+
+  state.sorted = [...state.filtered].sort((a, b) => {
+    let av = a[col] ?? '', bv = b[col] ?? '';
+    if (colDef?.type === 'money' || colDef?.type === 'num') {
+      return dir * (num(av) - num(bv));
+    }
+    if (colDef?.type === 'date') {
+      return dir * (new Date(av||0) - new Date(bv||0));
+    }
+    return dir * String(av).localeCompare(String(bv));
+  });
+
+  renderPage();
+}
+
+/* ══════════════════════════════════════════
+   RENDER PAGE
+══════════════════════════════════════════ */
+function renderPage() {
+  const total     = state.sorted.length;
+  const pages     = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const page      = Math.min(state.page, pages);
+  const start     = (page - 1) * PAGE_SIZE;
+  const pageRecs  = state.sorted.slice(start, start + PAGE_SIZE);
+  const query     = fSearch.value.trim().toLowerCase();
+  const cols      = state.isAdmin ? ADMIN_COLS : USER_COLS;
+
+  recordCount.textContent = total.toLocaleString() + ' record' + (total !== 1 ? 's' : '');
+
+  /* Empty state */
+  if (total === 0) {
     tableBody.innerHTML = '';
-    dashPage.style.display = 'none';
-    loginPage.style.display = 'flex';
-    clearError();
+    tblEmpty.classList.remove('hidden');
+    pagination.style.display = 'none';
+    return;
+  }
+  tblEmpty.classList.add('hidden');
+
+  /* Rows */
+  tableBody.innerHTML = pageRecs.map((r, i) => {
+    const absIdx = start + i + 1;
+    const cells = cols.map(c => {
+      if (c.key === '#') return `<td style="color:var(--dim)">${absIdx}</td>`;
+      const v = r[c.key];
+      switch (c.type) {
+        case 'idx':   return `<td>${absIdx}</td>`;
+        case 'money': {
+          const n = num(v);
+          if (c.key === 'Bill Received Amount')
+            return `<td>${n === 0 ? '<span style="color:var(--danger)">৳0</span>' : fmtMoney(n)}</td>`;
+          if (c.key === 'Bill Received Due')
+            return `<td>${n > 0 ? `<span style="color:var(--danger)">${fmtMoney(n)}</span>` : '<span style="color:var(--dim)">—</span>'}</td>`;
+          if (c.key === 'Referral Commission')
+            return `<td style="color:var(--a2);font-weight:700">${fmtMoney(n)}</td>`;
+          return `<td>${n ? fmtMoney(n) : '<span style="color:var(--dim)">—</span>'}</td>`;
+        }
+        case 'date':  return `<td>${fmtDate(v)}</td>`;
+        case 'num': {
+          if (c.key === 'Serial')
+            return `<td><span class="badge b-blue">${esc(v ?? '—')}</span></td>`;
+          return `<td>${esc(v ?? '—')}</td>`;
+        }
+        case 'str':
+        default: {
+          if (c.key === 'Referral Person')
+            return `<td><span class="badge b-warn">${hl(v, query)}</span></td>`;
+          if (c.key === 'Commission Rate')
+            return `<td><span class="badge b-dim">${hl(v, query)}</span></td>`;
+          if (c.key === 'Total Match') {
+            const tm = String(v ?? '').trim();
+            return `<td>${tm && tm !== '0' ? `<span class="badge b-green">${esc(tm)}</span>` : '<span class="badge b-dim">—</span>'}</td>`;
+          }
+          if (c.key === 'Patient Name')
+            return `<td style="font-weight:600">${hl(v, query)}</td>`;
+          return `<td>${hl(v, query)}</td>`;
+        }
+      }
+    }).join('');
+    return `<tr data-idx="${i}">${cells}</tr>`;
+  }).join('');
+
+  /* Scroll highlight for search */
+  if (query) {
+    const first = tableBody.querySelector('tr');
+    if (first) { first.classList.add('hl'); first.scrollIntoView({behavior:'smooth',block:'center'}); }
   }
 
-  /* ── Event Listeners ── */
-  btnLogin.addEventListener('click', doLogin);
-  btnLogout.addEventListener('click', doLogout);
-  btnApply.addEventListener('click', applyFilters);
-  btnReset.addEventListener('click', () => {
-    fFrom.value = '';
-    fTo.value = '';
-    fBillZero.checked = false;
-    fSearch.value = '';
-    applyFilters();
-  });
+  /* Pagination */
+  renderPagination(page, pages, total);
+}
 
-  // Live search (debounced)
-  let searchTimer;
-  fSearch.addEventListener('input', () => {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(applyFilters, 220);
-  });
+/* ══════════════════════════════════════════
+   PAGINATION
+══════════════════════════════════════════ */
+function renderPagination(page, pages, total) {
+  if (pages <= 1) { pagination.style.display = 'none'; return; }
+  pagination.style.display = 'flex';
 
-  // Enter to login
-  [inpName, inpPass].forEach(el => {
-    el.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  const start = (page-1)*PAGE_SIZE+1;
+  const end   = Math.min(page*PAGE_SIZE, total);
+
+  /* Build page numbers: always show first, last, and window around current */
+  const btns = [];
+  const addBtn = (p, label, active) => {
+    btns.push(`<button class="page-btn${active?' active':''}" data-p="${p}">${label}</button>`);
+  };
+  addBtn(1, '«', false);
+  addBtn(Math.max(1,page-1), '‹', false);
+
+  /* Window: max 5 pages around current */
+  const lo = Math.max(1, page-2), hi = Math.min(pages, page+2);
+  if (lo > 1) btns.push('<span style="color:var(--dim);font-size:.8rem;align-self:center">…</span>');
+  for (let p=lo; p<=hi; p++) addBtn(p, p, p===page);
+  if (hi < pages) btns.push('<span style="color:var(--dim);font-size:.8rem;align-self:center">…</span>');
+
+  addBtn(Math.min(pages,page+1), '›', false);
+  addBtn(pages, '»', false);
+
+  pagination.innerHTML =
+    `<span class="page-info">Showing ${start}–${end} of ${total.toLocaleString()}</span>
+     <div class="page-btns">${btns.join('')}</div>`;
+
+  pagination.querySelectorAll('.page-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const p = parseInt(btn.dataset.p);
+      if (p !== state.page) { state.page = p; renderPage(); }
+    });
   });
+}
+
+/* ══════════════════════════════════════════
+   EXPORT CSV
+══════════════════════════════════════════ */
+function exportCSV() {
+  const cols = state.isAdmin ? ADMIN_COLS : USER_COLS;
+  const headers = cols.filter(c=>c.key!=='#').map(c=>c.label);
+  const rows = state.sorted.map(r =>
+    cols.filter(c=>c.key!=='#').map(c => {
+      const v = r[c.key] ?? '';
+      const s = String(v);
+      return s.includes(',') || s.includes('"') || s.includes('\n')
+        ? `"${s.replace(/"/g,'""')}"` : s;
+    }).join(',')
+  );
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `referral_export_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ══════════════════════════════════════════
+   LOGOUT
+══════════════════════════════════════════ */
+function doLogout() {
+  state = {
+    isAdmin:false, userName:'', commissionRate:'—',
+    allRecords:[], filtered:[], sorted:[],
+    sortCol:'Bill Received Date', sortDir:'desc', page:1,
+  };
+  inpName.value = ''; inpPass.value = '';
+  fSearch.value = ''; fFrom.value = ''; fTo.value = '';
+  fBillZero.checked = false;
+  tableBody.innerHTML = '';
+  tableHead.innerHTML = '';
+  pagination.style.display = 'none';
+  tblDataWrap.classList.add('hidden');
+  tblLoading.classList.remove('hidden');
+  appPage.style.display = 'none';
+  loginPage.style.display = 'flex';
+  clearError();
+  /* Prevent back-button dashboard access */
+  history.replaceState(null, '', window.location.pathname);
+}
+
+/* ══════════════════════════════════════════
+   EVENTS
+══════════════════════════════════════════ */
+btnLogin.addEventListener('click', doLogin);
+btnLogout.addEventListener('click', doLogout);
+btnApply.addEventListener('click', applyFilters);
+btnExport.addEventListener('click', exportCSV);
+
+btnReset.addEventListener('click', () => {
+  fReferrer.value = '';
+  fFrom.value = ''; fTo.value = '';
+  fBillZero.checked = false;
+  fSearch.value = '';
+  state.page = 1;
+  applyFilters();
+});
+
+/* Live search — debounced */
+let sTimer;
+fSearch.addEventListener('input', () => {
+  clearTimeout(sTimer);
+  sTimer = setTimeout(applyFilters, 220);
+});
+
+/* Referrer dropdown live */
+fReferrer.addEventListener('change', applyFilters);
+
+/* Enter to login */
+[inpName, inpPass].forEach(el =>
+  el.addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); })
+);
+
+/* Prevent browser back to dashboard after logout */
+window.addEventListener('popstate', () => {
+  if (appPage.style.display !== 'none' && !state.userName) doLogout();
+});
 </script>
 </body>
 </html>
