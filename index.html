@@ -157,6 +157,11 @@
           <label for="serial">Serial</label>
           <input type="text" id="serial" name="serial" placeholder="e.g. SN-001" />
         </div>
+        <div class="field col-span-2">
+          <label for="patientSerialDate">Patient Serial Date</label>
+          <input type="date" id="patientSerialDate" name="patientSerialDate" />
+          <div class="field-hint">The date the patient's serial/appointment was taken. Defaults to today — click to pick any past, present, or future date.</div>
+        </div>
       </div>
 
       <!-- BILLING DETAILS -->
@@ -281,6 +286,7 @@
       }
 
       document.getElementById('billDate').valueAsDate = new Date();
+      document.getElementById('patientSerialDate').valueAsDate = new Date();
       loadReferralNames();
 
       // ─── FEEDBACK / VALIDATION / SUBMIT ─────────────────
@@ -319,6 +325,7 @@
       function resetForm() {
         form.reset();
         document.getElementById('billDate').valueAsDate = new Date();
+        document.getElementById('patientSerialDate').valueAsDate = new Date();
         referSelect.value = '';
         feedback.className = '';
         form.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
@@ -346,6 +353,7 @@
           patientPhone:   document.getElementById('patientPhone').value.trim(),
           location:       document.getElementById('location').value.trim(),
           serial:         document.getElementById('serial').value.trim(),
+          patientSerialDate: document.getElementById('patientSerialDate').value,
         };
 
         setLoading(true);
