@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Referral Portal</title>
+  <style>
+    /* ══════════════ TOKENS ══════════════ */
+    :root{
+      --bg:#0c0e18;--surface:#13162a;--card:#1b1f35;
+      --border:#262b4a;--border2:#1e2340;
+      --accent:#5b8df6;--a2:#34d4a8;--warn:#f5a623;--danger:#e05c72;
+      --text:#dde3f8;--sub:#8490bf;--dim:#4a5278;
+      --radius:10px;--sh:0 4px 28px rgba(0,0,0,.55);
+      font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);min-height:100vh}
+    /* ══ UTILS ══ */
+    .hidden{display:none!important}
+    mark{background:rgba(91,141,246,.28);color:inherit;border-radius:3px;padding:0 2px}
+    /* ══════════════ LOGIN ══════════════ */
+    #login-page{
+      display:flex;align-items:center;justify-content:center;
+      min-height:100vh;padding:1rem;
+      background:radial-gradient(ellipse at 65% 25%,#152060 0%,var(--bg) 68%);
+    }
+    .login-box{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:18px;padding:2.6rem 2.2rem;width:100%;max-width:400px;
+      box-shadow:var(--sh);
+    }
+    .login-logo{text-align:center;margin-bottom:2rem}
+    .login-logo .mark{
+      display:inline-flex;align-items:center;justify-content:center;
+      width:54px;height:54px;border-radius:15px;margin-bottom:.8rem;
+      background:linear-gradient(135deg,var(--accent),var(--a2));
+    }
+    .login-logo h1{font-size:1.3rem;font-weight:800}
+    .login-logo p{font-size:.78rem;color:var(--sub);margin-top:.25rem}
+    label{display:block;font-size:.74rem;font-weight:700;color:var(--sub);letter-spacing:.05em;margin-bottom:.3rem}
+    input[type=text],input[type=password],input[type=date],input[type=search],select{
+      width:100%;background:var(--card);border:1px solid var(--border);
+      border-radius:var(--radius);color:var(--text);padding:.62rem .82rem;
+      font-size:.88rem;outline:none;transition:border-color .18s;
+    }
+    select option{background:var(--card)}
+    input:focus,select:focus{border-color:var(--accent)}
+    .field{margin-bottom:1.05rem}
+    .btn-primary{
+      display:inline-flex;align-items:center;justify-content:center;gap:.4rem;
+      background:linear-gradient(135deg,var(--accent),#3f6fe8);color:#fff;
+      border:none;border-radius:var(--radius);padding:.72rem 1.5rem;
+      font-size:.9rem;font-weight:700;cursor:pointer;width:100%;
+      transition:opacity .18s,transform .1s;
+    }
+    .btn-primary:hover{opacity:.88}
+    .btn-primary:active{transform:scale(.98)}
+    .btn-primary:disabled{opacity:.45;cursor:not-allowed}
+    .error-msg{
+      background:rgba(224,92,114,.1);border:1px solid rgba(224,92,114,.35);
+      color:var(--danger);border-radius:8px;padding:.6rem .85rem;
+      font-size:.82rem;margin-bottom:1rem;display:none;
+    }
+    .error-msg.show{display:block}
+    /* ══════════════ SHELL ══════════════ */
+    #app-page{display:none}
+    .topbar{
+      background:var(--surface);border-bottom:1px solid var(--border);
+      padding:.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between;
+      gap:1rem;position:sticky;top:0;z-index:200;
+    }
+    .topbar-brand{display:flex;align-items:center;gap:.55rem;font-weight:800;font-size:1rem}
+    .topbar-brand .live{width:8px;height:8px;background:var(--a2);border-radius:50%}
+    .user-pill{
+      display:flex;align-items:center;gap:.5rem;background:var(--card);
+      border:1px solid var(--border);border-radius:999px;padding:.3rem .75rem;
+      font-size:.8rem;font-weight:700;
+    }
+    .avatar{
+      width:24px;height:24px;border-radius:50%;
+      background:linear-gradient(135deg,var(--accent),var(--a2));
+      display:flex;align-items:center;justify-content:center;
+      font-size:.64rem;font-weight:800;color:#fff;flex-shrink:0;
+    }
+    .admin-badge{
+      background:rgba(245,166,35,.14);color:var(--warn);
+      border:1px solid rgba(245,166,35,.3);border-radius:5px;
+      font-size:.65rem;font-weight:800;padding:.1rem .45rem;letter-spacing:.04em;
+    }
+    .btn-logout{
+      background:transparent;border:1px solid var(--border);color:var(--sub);
+      border-radius:8px;padding:.3rem .75rem;font-size:.78rem;cursor:pointer;
+      transition:border-color .18s,color .18s;
+    }
+    .btn-logout:hover{border-color:var(--danger);color:var(--danger)}
+    /* ══════════════ MAIN ══════════════ */
+    .main-inner{max-width:1360px;margin:0 auto;padding:1.5rem 1.2rem 3rem}
+    /* ══════════════ SUMMARY CARDS ══════════════ */
+    .summary-grid{
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
+      gap:.85rem;margin-bottom:1.3rem;
+    }
+    .stat-card{
+      background:var(--card);border:1px solid var(--border);
+      border-radius:12px;padding:1rem 1.1rem;position:relative;overflow:hidden;
+    }
+    .stat-card::after{
+      content:'';position:absolute;top:0;left:0;right:0;height:3px;
+      background:linear-gradient(90deg,var(--accent),var(--a2));
+    }
+    .stat-label{font-size:.68rem;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4rem}
+    .stat-value{font-size:1.45rem;font-weight:800;line-height:1}
+    .stat-value.g{color:var(--a2)}.stat-value.b{color:var(--accent)}.stat-value.w{color:var(--warn)}
+    .stat-sub{font-size:.7rem;color:var(--dim);margin-top:.3rem}
+    /* ══════════════ CONTROLS ══════════════ */
+    .controls-wrap{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:12px;padding:1rem 1.15rem;margin-bottom:1.2rem;
+    }
+    .controls-row{display:flex;flex-wrap:wrap;gap:.65rem;align-items:flex-end}
+    .controls-row .field{margin:0;min-width:130px;flex:1}
+    .search-wrap{position:relative;flex:2;min-width:175px}
+    .search-wrap svg{
+      position:absolute;left:.7rem;top:50%;transform:translateY(-50%);
+      color:var(--sub);pointer-events:none;
+    }
+    .search-wrap input{padding-left:2.1rem}
+    .btn-apply{
+      background:linear-gradient(135deg,var(--accent),#3f6fe8);color:#fff;
+      border:none;border-radius:var(--radius);padding:.62rem 1.2rem;
+      font-size:.84rem;font-weight:700;cursor:pointer;white-space:nowrap;
+      transition:opacity .18s;flex-shrink:0;
+    }
+    .btn-apply:hover{opacity:.86}
+    .btn-reset{
+      background:transparent;border:1px solid var(--border);color:var(--sub);
+      border-radius:var(--radius);padding:.62rem 1rem;font-size:.84rem;
+      cursor:pointer;white-space:nowrap;transition:border-color .18s;flex-shrink:0;
+    }
+    .btn-reset:hover{border-color:var(--sub)}
+    .filter-check{display:flex;align-items:center;gap:.4rem;padding:.62rem 0}
+    .filter-check input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+    .filter-check label{margin:0;color:var(--text);font-size:.82rem;cursor:pointer;white-space:nowrap}
+    /* ══════════════ ANALYTICS (admin) ══════════════ */
+    .analytics-section{margin-bottom:1.2rem}
+    .analytics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.85rem}
+    .chart-card{
+      background:var(--card);border:1px solid var(--border);
+      border-radius:12px;padding:1rem 1.1rem;overflow:hidden;
+    }
+    .chart-title{font-size:.78rem;font-weight:700;color:var(--sub);margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.05em}
+    .bar-list{display:flex;flex-direction:column;gap:.45rem}
+    .bar-item{}
+    .bar-label{font-size:.75rem;display:flex;justify-content:space-between;margin-bottom:.2rem}
+    .bar-label span:first-child{color:var(--text);font-weight:600}
+    .bar-label span:last-child{color:var(--sub);font-size:.7rem}
+    .bar-track{height:7px;background:var(--border);border-radius:99px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--a2));transition:width .35s}
+    /* ══════════════ TABLE ══════════════ */
+    .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .table-header{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:.8rem 1.15rem;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:.5rem;
+    }
+    .table-title{font-size:.88rem;font-weight:800}
+    .table-meta{display:flex;align-items:center;gap:.75rem}
+    .record-count{font-size:.75rem;color:var(--sub)}
+    .btn-export{
+      background:transparent;border:1px solid var(--border);color:var(--sub);
+      border-radius:8px;padding:.28rem .75rem;font-size:.75rem;cursor:pointer;
+      transition:border-color .18s,color .18s;display:flex;align-items:center;gap:.3rem;
+    }
+    .btn-export:hover{border-color:var(--a2);color:var(--a2)}
+    .tbl-scroll{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:.8rem}
+    thead th{
+      background:var(--card);padding:.65rem .9rem;text-align:left;
+      color:var(--sub);font-size:.68rem;font-weight:700;text-transform:uppercase;
+      letter-spacing:.06em;white-space:nowrap;border-bottom:1px solid var(--border);
+      cursor:pointer;user-select:none;
+    }
+    thead th:hover{color:var(--text)}
+    thead th .sort-icon{font-size:.7rem;margin-left:.3rem;opacity:.45}
+    thead th.sorted{color:var(--accent)}
+    thead th.sorted .sort-icon{opacity:1}
+    tbody tr{border-bottom:1px solid var(--border2);transition:background .12s}
+    tbody tr:last-child{border-bottom:none}
+    tbody tr:hover{background:rgba(91,141,246,.05)}
+    tbody tr.hl{background:rgba(91,141,246,.11)}
+    td{padding:.68rem .9rem;vertical-align:middle;white-space:nowrap}
+    .badge{display:inline-block;padding:.18rem .5rem;border-radius:99px;font-size:.68rem;font-weight:800}
+    .b-blue{background:rgba(91,141,246,.15);color:var(--accent)}
+    .b-green{background:rgba(52,212,168,.14);color:var(--a2)}
+    .b-warn{background:rgba(245,166,35,.14);color:var(--warn)}
+    .b-dim{background:rgba(74,82,120,.18);color:var(--dim)}
+    .b-red{background:rgba(224,92,114,.14);color:var(--danger)}
+    /* ══ PAGINATION ══ */
+    .pagination{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:.7rem 1.15rem;border-top:1px solid var(--border);flex-wrap:wrap;gap:.5rem;
+    }
+    .page-info{font-size:.75rem;color:var(--sub)}
+    .page-btns{display:flex;gap:.35rem}
+    .page-btn{
+      background:var(--card);border:1px solid var(--border);color:var(--text);
+      border-radius:7px;padding:.3rem .6rem;font-size:.78rem;cursor:pointer;
+      min-width:32px;text-align:center;transition:border-color .15s;
+    }
+    .page-btn:hover{border-color:var(--accent)}
+    .page-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+    .page-btn:disabled{opacity:.35;cursor:not-allowed}
+    /* ══ EMPTY / LOADING ══ */
+    .state-box{text-align:center;padding:3rem 1rem}
+    .state-box svg{color:var(--border);margin-bottom:.75rem}
+    .state-box p{color:var(--sub);font-size:.88rem}
+    .spinner{width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .65s linear infinite;margin:0 auto .75rem}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    /* ══════════════ BILL RECEIVED — ADMIN INLINE UPDATE ══════════════ */
+    .bill-cell{display:flex;align-items:center;gap:.45rem}
+    .btn-bill-update{
+      background:transparent;border:1px solid var(--border);color:var(--accent);
+      border-radius:6px;padding:.16rem .5rem;font-size:.66rem;font-weight:700;
+      cursor:pointer;white-space:nowrap;transition:border-color .15s,background .15s;
+    }
+    .btn-bill-update:hover{border-color:var(--accent);background:rgba(91,141,246,.1)}
+    .bill-edit-wrap{display:flex;align-items:center;gap:.35rem}
+    .bill-edit-input{
+      width:100px;background:var(--card);border:1px solid var(--accent);
+      border-radius:6px;color:var(--text);padding:.3rem .5rem;font-size:.8rem;outline:none;
+    }
+    .btn-bill-save,.btn-bill-cancel{
+      border-radius:6px;padding:.28rem .55rem;font-size:.72rem;font-weight:800;
+      cursor:pointer;line-height:1;
+    }
+    .btn-bill-save{background:var(--a2);border:none;color:#06251d}
+    .btn-bill-save:hover{opacity:.88}
+    .btn-bill-cancel{background:transparent;border:1px solid var(--border);color:var(--sub)}
+    .btn-bill-cancel:hover{border-color:var(--danger);color:var(--danger)}
+    /* ══ CONFIRM MODAL ══ */
+    .modal-overlay{
+      position:fixed;inset:0;background:rgba(5,7,15,.65);
+      display:flex;align-items:center;justify-content:center;z-index:1000;padding:1rem;
+    }
+    .modal-overlay.hidden{display:none}
+    .modal-box{
+      background:var(--surface);border:1px solid var(--border);border-radius:14px;
+      padding:1.6rem;max-width:380px;width:100%;box-shadow:var(--sh);
+    }
+    .modal-box h3{font-size:1.02rem;font-weight:800;margin-bottom:.6rem}
+    .modal-box p{font-size:.85rem;color:var(--sub);margin-bottom:1.1rem;line-height:1.55}
+    .modal-box .amount-highlight{color:var(--a2);font-weight:800}
+    .modal-box .patient-highlight{color:var(--text);font-weight:700}
+    .modal-error{
+      color:var(--danger);font-size:.78rem;margin:-.4rem 0 .9rem;display:none;
+    }
+    .modal-error.show{display:block}
+    .modal-actions{display:flex;gap:.6rem;justify-content:flex-end}
+    .modal-btn-yes{
+      display:inline-flex;align-items:center;justify-content:center;gap:.4rem;
+      background:linear-gradient(135deg,var(--accent),#3f6fe8);color:#fff;border:none;
+      border-radius:8px;padding:.58rem 1.15rem;font-size:.85rem;font-weight:700;cursor:pointer;
+      transition:opacity .18s;
+    }
+    .modal-btn-yes:hover{opacity:.88}
+    .modal-btn-yes:disabled{opacity:.55;cursor:not-allowed}
+    .modal-btn-no{
+      background:transparent;border:1px solid var(--border);color:var(--sub);
+      border-radius:8px;padding:.58rem 1.15rem;font-size:.85rem;cursor:pointer;
+      transition:border-color .18s;
+    }
+    .modal-btn-no:hover{border-color:var(--sub)}
+    .modal-btn-no:disabled{opacity:.55;cursor:not-allowed}
+    .spinner-sm{
+      width:13px;height:13px;border:2px solid rgba(255,255,255,.45);
+      border-top-color:#fff;border-radius:50%;display:inline-block;
+      animation:spin .6s linear infinite;
+    }
+    /* ══ RESPONSIVE ══ */
+    @media(max-width:700px){
+      .topbar{padding:.65rem 1rem}
+      .main-inner{padding:1rem .8rem 2.5rem}
+      .summary-grid{grid-template-columns:1fr 1fr}
+      .stat-value{font-size:1.2rem}
+      .analytics-grid{grid-template-columns:1fr}
+    }
+    @media(max-width:420px){.summary-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ LOGIN ══════════════════ -->
+<div id="login-page">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="mark">
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+      <h1>Referral Portal</h1>
+      <p>Sign in to view your account</p>
+    </div>
+    <div id="login-error" class="error-msg"></div>
+    <div class="field">
+      <label for="inp-name">Name / Username</label>
+      <input id="inp-name" type="text" placeholder="Your name" autocomplete="username"/>
+    </div>
+    <div class="field">
+      <label for="inp-pass">Password</label>
+      <input id="inp-pass" type="password" placeholder="••••••" autocomplete="current-password"/>
+    </div>
+    <button id="btn-login" class="btn-primary">Sign In</button>
+  </div>
+</div>
+
+<!-- ══════════════════ APP SHELL ══════════════════ -->
+<div id="app-page">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-brand"><div class="live"></div>Referral Portal</div>
+    <div style="display:flex;align-items:center;gap:.65rem;flex-wrap:wrap">
+      <div class="user-pill">
+        <div class="avatar" id="user-avatar"></div>
+        <span id="user-name-label">User</span>
+        <span id="admin-badge" class="admin-badge hidden">ADMIN</span>
+      </div>
+      <button class="btn-logout" id="btn-logout">Sign out</button>
+    </div>
+  </div>
+
+  <div class="main-inner">
+
+    <!-- SUMMARY CARDS -->
+    <div class="summary-grid" id="summary-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Patients</div>
+        <div class="stat-value b" id="s-patients">0</div>
+        <div class="stat-sub">in selected period</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Business</div>
+        <div class="stat-value g" id="s-business">৳0</div>
+        <div class="stat-sub">total business amount</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Bill Received</div>
+        <div class="stat-value" id="s-bill">৳0</div>
+        <div class="stat-sub">total bill received</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Commission</div>
+        <div class="stat-value g" id="s-commission">৳0</div>
+        <div class="stat-sub">referral commission</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Commission Rate</div>
+        <div class="stat-value" id="s-rate">—</div>
+        <div class="stat-sub">your rate</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Admin Share</div>
+        <div class="stat-value w" id="s-admin">৳0</div>
+        <div class="stat-sub">admin received</div>
+      </div>
+      <!-- Admin-only extras -->
+      <div class="stat-card hidden" id="sc-users">
+        <div class="stat-label">Active Referrers</div>
+        <div class="stat-value b" id="s-users">0</div>
+        <div class="stat-sub">unique referral persons</div>
+      </div>
+    </div>
+
+    <!-- ADMIN ANALYTICS -->
+    <div class="analytics-section hidden" id="analytics-section">
+      <div class="analytics-grid">
+        <div class="chart-card" id="chart-business"><div class="chart-title">Business by Referral Person</div><div class="bar-list" id="bars-business"></div></div>
+        <div class="chart-card" id="chart-commission"><div class="chart-title">Commission by Referral Person</div><div class="bar-list" id="bars-commission"></div></div>
+        <div class="chart-card" id="chart-patients"><div class="chart-title">Patients by Referral Person</div><div class="bar-list" id="bars-patients"></div></div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls-wrap">
+      <div class="controls-row">
+        <!-- Admin-only filters -->
+        <div class="field hidden" id="f-referrer-wrap">
+          <label for="f-referrer">Referral Person</label>
+          <select id="f-referrer"><option value="">All Referral Persons</option></select>
+        </div>
+        <!-- Date range -->
+        <div class="field">
+          <label for="f-from">From Date</label>
+          <input type="date" id="f-from"/>
+        </div>
+        <div class="field">
+          <label for="f-to">To Date</label>
+          <input type="date" id="f-to"/>
+        </div>
+        <!-- Bill = 0 checkbox -->
+        <div class="field" style="flex:0 0 auto;min-width:auto">
+          <label>&nbsp;</label>
+          <div class="filter-check">
+            <input type="checkbox" id="f-bill-zero"/>
+            <label for="f-bill-zero">Bill Received = 0</label>
+          </div>
+        </div>
+        <!-- Search -->
+        <div class="search-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="search" id="f-search" placeholder="Search patients, location…"/>
+        </div>
+        <button class="btn-apply" id="btn-apply">Apply</button>
+        <button class="btn-reset" id="btn-reset">Reset</button>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <div class="table-header">
+        <span class="table-title">Patient Records</span>
+        <div class="table-meta">
+          <span class="record-count" id="record-count">0 records</span>
+          <button class="btn-export hidden" id="btn-export">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div id="tbl-loading" class="state-box">
+        <div class="spinner"></div>
+        <p>Loading…</p>
+      </div>
+
+      <div id="tbl-data-wrap" class="hidden">
+        <div class="tbl-scroll">
+          <table id="main-table">
+            <thead id="table-head"></thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+        <div id="tbl-empty" class="state-box hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 15h8M9 9h.01M15 9h.01"/></svg>
+          <p>No records match the current filters.</p>
+        </div>
+        <div class="pagination" id="pagination" style="display:none"></div>
+      </div>
+    </div>
+
+  </div><!-- /main-inner -->
+</div><!-- /app-page -->
+
+<!-- ══════════════════ BILL UPDATE — CONFIRM MODAL (admin only) ══════════════════ -->
+<div id="confirm-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h3>Confirm Bill Update</h3>
+    <p id="confirm-modal-text">Are you sure you want to update this?</p>
+    <div id="confirm-modal-error" class="modal-error"></div>
+    <div class="modal-actions">
+      <button class="modal-btn-no" id="confirm-modal-no">Cancel</button>
+      <button class="modal-btn-yes" id="confirm-modal-yes">Yes, Update</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════ */
+const WEBHOOK = 'https://n8n.doitfastit.com/webhook/verify-referral';
+const WEBHOOK_UPDATE_BILL = 'https://n8n.doitfastit.com/webhook/update-bill';
+const PAGE_SIZE = 50;
+
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+let state = {
+  isAdmin: false,
+  userName: '',
+  commissionRate: '—',
+  allRecords: [],       // raw from API
+  filtered: [],         // after all filters
+  sorted: [],           // after sort
+  sortCol: 'Bill Received Date',
+  sortDir: 'desc',
+  page: 1,
+  editingKey: null,      // key of the row currently in inline bill-edit mode (admin only)
+  pendingUpdate: null,   // { record, newAmount, newDue } awaiting confirm-modal decision
+};
+
+/* ══════════════════════════════════════════
+   DOM
+══════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const loginPage   = $('login-page');
+const appPage     = $('app-page');
+const loginError  = $('login-error');
+const btnLogin    = $('btn-login');
+const inpName     = $('inp-name');
+const inpPass     = $('inp-pass');
+const btnLogout   = $('btn-logout');
+const fReferrer   = $('f-referrer');
+const fFrom       = $('f-from');
+const fTo         = $('f-to');
+const fBillZero   = $('f-bill-zero');
+const fSearch     = $('f-search');
+const btnApply    = $('btn-apply');
+const btnReset    = $('btn-reset');
+const tableHead   = $('table-head');
+const tableBody   = $('table-body');
+const tblLoading  = $('tbl-loading');
+const tblDataWrap = $('tbl-data-wrap');
+const tblEmpty    = $('tbl-empty');
+const pagination  = $('pagination');
+const recordCount = $('record-count');
+const btnExport   = $('btn-export');
+const confirmModal     = $('confirm-modal');
+const confirmModalText = $('confirm-modal-text');
+const confirmModalErr  = $('confirm-modal-error');
+const confirmModalYes  = $('confirm-modal-yes');
+const confirmModalNo   = $('confirm-modal-no');
+
+/* ══════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════ */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const hl = (text, q) => {
+  if (!q) return esc(text);
+  return esc(String(text ?? '')).replace(
+    new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi'),
+    '<mark>$1</mark>');
+};
+
+const fmtMoney = n => {
+  const v = parseFloat(n) || 0;
+  return '৳' + v.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+};
+
+const fmtDate = s => {
+  if (!s) return '—';
+  const d = new Date(s);
+  return isNaN(d) ? s : d.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
+};
+
+const num = v => parseFloat(v) || 0;
+
+function showError(msg) { loginError.textContent = msg; loginError.classList.add('show'); }
+function clearError()   { loginError.classList.remove('show'); }
+
+/* Stable identity for a patient row: Referral Person + Serial (matches
+   the matching columns used server-side in the update-bill workflow). */
+function recKeyRaw(r) { return String(r?.['Referral Person'] ?? '') + '|||' + String(r?.['Serial'] ?? ''); }
+function recKeyEnc(r) { return encodeURIComponent(recKeyRaw(r)); }
+function findRecordByKey(encKey) {
+  let raw;
+  try { raw = decodeURIComponent(encKey); } catch { return null; }
+  const idx = raw.lastIndexOf('|||');
+  if (idx === -1) return null;
+  const person = raw.slice(0, idx);
+  const serial = raw.slice(idx + 3);
+  return state.allRecords.find(rr =>
+    String(rr['Referral Person'] ?? '') === person && String(rr['Serial'] ?? '') === serial);
+}
+
+/* ══════════════════════════════════════════
+   COLUMN DEFINITIONS
+══════════════════════════════════════════ */
+const USER_COLS = [
+  {key:'#',         label:'#',               type:'idx'},
+  {key:'Serial',    label:'Serial',           type:'num'},
+  {key:'Patient Name',      label:'Patient',  type:'str'},
+  {key:'Patient Phone Number', label:'Phone', type:'str'},
+  {key:'Location',  label:'Location',         type:'str'},
+  {key:'Bill Received Date', label:'Date',    type:'date'},
+  {key:'Payment',   label:'Payment',          type:'money'},
+  {key:'Bill Received Amount', label:'Bill Rcvd', type:'money'},
+  {key:'Bill Received Due',    label:'Bill Due',  type:'money'},
+  {key:'Total Business Amount', label:'Business', type:'money'},
+  {key:'Admin Received Amount', label:'Admin Rcvd', type:'money'},
+  {key:'Referral Commission',   label:'Commission', type:'money'},
+  {key:'Match Person Name', label:'Match Person', type:'str'},
+  {key:'Total Match',       label:'Matches',     type:'str'},
+];
+
+const ADMIN_COLS = [
+  {key:'#',         label:'#',               type:'idx'},
+  {key:'Serial',    label:'Serial',           type:'num'},
+  {key:'Referral Person', label:'Referrer',   type:'str'},
+  {key:'Commission Rate', label:'Comm. Rate', type:'str'},
+  {key:'Patient Name',    label:'Patient',    type:'str'},
+  {key:'Patient Phone Number', label:'Phone', type:'str'},
+  {key:'Location',        label:'Location',   type:'str'},
+  {key:'Bill Received Date', label:'Date',    type:'date'},
+  {key:'Payment',         label:'Payment',    type:'money'},
+  {key:'Bill Received Amount', label:'Bill Rcvd', type:'money'},
+  {key:'Bill Received Due',    label:'Bill Due',  type:'money'},
+  {key:'Total Business Amount', label:'Business', type:'money'},
+  {key:'Admin Received Amount', label:'Admin Rcvd', type:'money'},
+  {key:'Referral Commission',   label:'Commission', type:'money'},
+  {key:'Match Person Name', label:'Match Person', type:'str'},
+  {key:'Total Match',       label:'Matches',     type:'str'},
+];
+
+/* ══════════════════════════════════════════
+   LOGIN
+══════════════════════════════════════════ */
+async function doLogin() {
+  clearError();
+  const name = inpName.value.trim();
+  const pass = inpPass.value.trim();
+  if (!name || !pass) { showError('Please enter your name and password.'); return; }
+
+  btnLogin.disabled = true;
+  btnLogin.textContent = 'Signing in…';
+
+  try {
+    const res = await fetch(WEBHOOK, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Accept':'application/json'},
+      body: JSON.stringify({name, password: pass}),
+    });
+
+    const raw = await res.text().catch(() => '');
+
+    if (!res.ok) {
+      try { const e = JSON.parse(raw); showError(e.message || 'Incorrect credentials.'); }
+      catch { showError('Incorrect name or password. Please try again.'); }
+      return;
+    }
+
+    let data;
+    try { data = JSON.parse(raw); }
+    catch { showError('Unexpected server response. Please try again.'); return; }
+
+    /* Auth failure from automation (can arrive as an array or a bare object) */
+    const authProbe = Array.isArray(data) ? data[0] : data;
+    if (authProbe?.success === false) {
+      showError(authProbe.message || 'Incorrect name or password. Please try again.');
+      return;
+    }
+
+    /* ─────────────────────────────────────────────────────────
+       Extract the dataset + account type from the response.
+
+       Two shapes are now in play:
+
+       1) Normal user  → response is an array of record objects
+          (unchanged, legacy behavior):
+             [ {Patient Name:..., Referral Person:...}, ... ]
+
+       2) Admin        → the automation now consolidates everything
+          into ONE object containing a single internal array of
+          records (per execution 61476, that array lives under the
+          key "" produced by the Aggregate node). We don't hardcode
+          the exact key name — we look for it, with a couple of
+          sensible fallbacks in case the automation's field naming
+          shifts slightly (e.g. "data"/"records"/"items").
+    ───────────────────────────────────────────────────────── */
+    let records = [];
+    let isAdmin = false;
+
+    if (Array.isArray(data)) {
+      /* Legacy / normal-user shape: array of records directly */
+      records = data;
+      const uniqueReferrers = new Set(records.map(r => r['Referral Person']).filter(Boolean));
+      isAdmin = uniqueReferrers.size > 1 ||
+                (uniqueReferrers.size >= 1 && name.toLowerCase() === 'admin');
+    } else if (data && typeof data === 'object') {
+      /* New consolidated shape: single object wrapping the dataset */
+      const knownKeys = ['', 'data', 'records', 'items', 'result', 'results'];
+      let arrayKey = knownKeys.find(k => Array.isArray(data[k]) && data[k].length);
+      if (arrayKey === undefined) {
+        /* Fallback: first array-valued property on the object */
+        arrayKey = Object.keys(data).find(k => Array.isArray(data[k]));
+      }
+
+      if (arrayKey !== undefined && Array.isArray(data[arrayKey])) {
+        records = data[arrayKey];
+        isAdmin = true; // consolidated single-object shape is the Admin path
+      } else if (data['Patient Name'] || data['Referral Person']) {
+        /* Single normal-user record returned as a bare object */
+        records = [data];
+        isAdmin = false;
+      }
+    }
+
+    /* Sanity: must have patient-like records */
+    if (!records.length || (!records[0]?.['Patient Name'] && !records[0]?.['Referral Person'])) {
+      showError('Incorrect name or password. Please try again.');
+      return;
+    }
+
+    /* Commission rate for non-admin (single user) */
+    if (!isAdmin && records[0]?.['Commission Rate'] !== undefined) {
+      const rr = records[0]['Commission Rate'];
+      if (typeof rr === 'string' && rr.includes('%')) {
+        state.commissionRate = rr;
+      } else {
+        const rv = parseFloat(rr);
+        state.commissionRate = isNaN(rv) ? String(rr)
+          : ((rv <= 1 ? rv * 100 : rv).toFixed(0) + '%');
+      }
+    } else {
+      state.commissionRate = '—';
+    }
+
+    state.isAdmin = isAdmin;
+    state.userName = name;
+    state.allRecords = records;
+
+    bootApp();
+
+  } catch(err) {
+    console.error(err);
+    showError('Network error. Check your connection and try again.');
+  } finally {
+    btnLogin.disabled = false;
+    btnLogin.textContent = 'Sign In';
+  }
+}
+
+/* ══════════════════════════════════════════
+   BOOT DASHBOARD
+══════════════════════════════════════════ */
+function bootApp() {
+  /* User info */
+  $('user-name-label').textContent = state.userName;
+  $('user-avatar').textContent = state.userName.charAt(0).toUpperCase();
+  $('admin-badge').classList.toggle('hidden', !state.isAdmin);
+
+  /* Show/hide admin controls */
+  $('f-referrer-wrap').classList.toggle('hidden', !state.isAdmin);
+  $('analytics-section').classList.toggle('hidden', !state.isAdmin);
+  $('sc-users').classList.toggle('hidden', !state.isAdmin);
+  btnExport.classList.toggle('hidden', !state.isAdmin);
+
+  /* Build referrer dropdown (admin) */
+  if (state.isAdmin) {
+    const persons = [...new Set(state.allRecords.map(r => r['Referral Person']).filter(Boolean))].sort();
+    fReferrer.innerHTML = '<option value="">All Referral Persons</option>' +
+      persons.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+  }
+
+  /* Build table header */
+  buildTableHead();
+
+  /* Default date range: this month */
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
+  fFrom.value = `${y}-${m}-01`;
+  fTo.value   = `${y}-${m}-${new Date(y, now.getMonth()+1, 0).getDate()}`;
+
+  /* Show app */
+  loginPage.style.display = 'none';
+  appPage.style.display = 'block';
+  tblLoading.classList.add('hidden');
+  tblDataWrap.classList.remove('hidden');
+
+  applyFilters();
+}
+
+/* ══════════════════════════════════════════
+   TABLE HEAD
+══════════════════════════════════════════ */
+function buildTableHead() {
+  const cols = state.isAdmin ? ADMIN_COLS : USER_COLS;
+  tableHead.innerHTML = '<tr>' + cols.map(c => {
+    if (c.key === '#') return '<th>#</th>';
+    const sorted = state.sortCol === c.key;
+    const icon   = sorted ? (state.sortDir === 'asc' ? '▲' : '▼') : '⇅';
+    return `<th class="${sorted?'sorted':''}" data-col="${esc(c.key)}" title="Sort by ${esc(c.label)}">
+      ${esc(c.label)}<span class="sort-icon">${icon}</span>
+    </th>`;
+  }).join('') + '</tr>';
+
+  tableHead.querySelectorAll('th[data-col]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (state.sortCol === col) state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+      else { state.sortCol = col; state.sortDir = 'asc'; }
+      state.page = 1;
+      buildTableHead();
+      sortAndRender();
+    });
+  });
+}
+
+/* ══════════════════════════════════════════
+   APPLY FILTERS
+══════════════════════════════════════════ */
+function applyFilters() {
+  const referrer = state.isAdmin ? fReferrer.value : '';
+  const from     = fFrom.value ? new Date(fFrom.value) : null;
+  const to       = fTo.value   ? new Date(fTo.value + 'T23:59:59') : null;
+  const billZ    = fBillZero.checked;
+  const query    = fSearch.value.trim().toLowerCase();
+
+  state.filtered = state.allRecords.filter(r => {
+    /* Referrer filter (admin) */
+    if (referrer && r['Referral Person'] !== referrer) return false;
+
+    /* Date filter on Bill Received Date */
+    if (from || to) {
+      const d = r['Bill Received Date'] ? new Date(r['Bill Received Date']) : null;
+      if (!d || isNaN(d)) return false;
+      if (from && d < from) return false;
+      if (to   && d > to)   return false;
+    }
+
+    /* Bill Received Amount = 0 */
+    if (billZ && (num(r['Bill Received Amount']) !== 0)) return false;
+
+    /* Full-text search */
+    if (query) {
+      const hay = [
+        r['Patient Name'], r['Referral Person'], r['Location'],
+        r['Patient Phone Number'], r['Match Person Name'],
+        r['Serial'], r['Bill Received Date'], r['Patient Serial Date'],
+        r['Commission Rate']
+      ].map(v => String(v ?? '').toLowerCase()).join(' ');
+      if (!hay.includes(query)) return false;
+    }
+
+    return true;
+  });
+
+  state.page = 1;
+  renderSummary();
+  renderAnalytics();
+  sortAndRender();
+}
+
+/* ══════════════════════════════════════════
+   SUMMARY
+══════════════════════════════════════════ */
+function renderSummary() {
+  const recs = state.filtered;
+  const total    = recs.length;
+  const business = recs.reduce((a,r) => a + num(r['Total Business Amount']), 0);
+  const bill     = recs.reduce((a,r) => a + num(r['Bill Received Amount']), 0);
+  const comm     = recs.reduce((a,r) => a + num(r['Referral Commission']), 0);
+  const admin    = recs.reduce((a,r) => a + num(r['Admin Received Amount']), 0);
+
+  $('s-patients').textContent  = total.toLocaleString();
+  $('s-business').textContent  = fmtMoney(business);
+  $('s-bill').textContent      = fmtMoney(bill);
+  $('s-commission').textContent= fmtMoney(comm);
+  $('s-rate').textContent      = state.isAdmin ? '—' : state.commissionRate;
+  $('s-admin').textContent     = fmtMoney(admin);
+
+  if (state.isAdmin) {
+    const users = new Set(recs.map(r => r['Referral Person']).filter(Boolean)).size;
+    $('s-users').textContent = users;
+  }
+}
+
+/* ══════════════════════════════════════════
+   ANALYTICS (admin only)
+══════════════════════════════════════════ */
+function renderAnalytics() {
+  if (!state.isAdmin) return;
+  const recs = state.filtered;
+
+  /* Group by Referral Person */
+  const byPerson = {};
+  recs.forEach(r => {
+    const p = r['Referral Person'] || 'Unknown';
+    if (!byPerson[p]) byPerson[p] = {business:0, commission:0, patients:0};
+    byPerson[p].business   += num(r['Total Business Amount']);
+    byPerson[p].commission += num(r['Referral Commission']);
+    byPerson[p].patients   += 1;
+  });
+
+  renderBars('bars-business', byPerson, 'business', fmtMoney);
+  renderBars('bars-commission', byPerson, 'commission', fmtMoney);
+  renderBars('bars-patients', byPerson, 'patients', v => v);
+}
+
+function renderBars(containerId, data, metric, fmt) {
+  const container = $(containerId);
+  const entries = Object.entries(data).sort((a,b) => b[1][metric] - a[1][metric]).slice(0,8);
+  if (!entries.length) { container.innerHTML = '<p style="color:var(--dim);font-size:.75rem">No data</p>'; return; }
+  const max = entries[0][1][metric] || 1;
+  container.innerHTML = entries.map(([person, d]) => {
+    const pct = Math.round((d[metric] / max) * 100);
+    return `<div class="bar-item">
+      <div class="bar-label"><span>${esc(person)}</span><span>${esc(fmt(d[metric]))}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════
+   SORT + RENDER
+══════════════════════════════════════════ */
+function sortAndRender() {
+  const col = state.sortCol;
+  const dir = state.sortDir === 'asc' ? 1 : -1;
+  const cols = state.isAdmin ? ADMIN_COLS : USER_COLS;
+  const colDef = cols.find(c => c.key === col);
+
+  state.sorted = [...state.filtered].sort((a, b) => {
+    let av = a[col] ?? '', bv = b[col] ?? '';
+    if (colDef?.type === 'money' || colDef?.type === 'num') {
+      return dir * (num(av) - num(bv));
+    }
+    if (colDef?.type === 'date') {
+      return dir * (new Date(av||0) - new Date(bv||0));
+    }
+    return dir * String(av).localeCompare(String(bv));
+  });
+
+  renderPage();
+}
+
+/* ══════════════════════════════════════════
+   RENDER PAGE
+══════════════════════════════════════════ */
+function renderPage() {
+  const total     = state.sorted.length;
+  const pages     = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const page      = Math.min(state.page, pages);
+  const start     = (page - 1) * PAGE_SIZE;
+  const pageRecs  = state.sorted.slice(start, start + PAGE_SIZE);
+  const query     = fSearch.value.trim().toLowerCase();
+  const cols      = state.isAdmin ? ADMIN_COLS : USER_COLS;
+
+  recordCount.textContent = total.toLocaleString() + ' record' + (total !== 1 ? 's' : '');
+
+  /* Empty state */
+  if (total === 0) {
+    tableBody.innerHTML = '';
+    tblEmpty.classList.remove('hidden');
+    pagination.style.display = 'none';
+    return;
+  }
+  tblEmpty.classList.add('hidden');
+
+  /* Rows */
+  tableBody.innerHTML = pageRecs.map((r, i) => {
+    const absIdx = start + i + 1;
+    const cells = cols.map(c => {
+      if (c.key === '#') return `<td style="color:var(--dim)">${absIdx}</td>`;
+      const v = r[c.key];
+      switch (c.type) {
+        case 'idx':   return `<td>${absIdx}</td>`;
+        case 'money': {
+          const n = num(v);
+
+          /* Bill Received Amount: admins get an inline "Update" control */
+          if (c.key === 'Bill Received Amount') {
+            const amountHtml = n === 0
+              ? '<span style="color:var(--danger)">৳0</span>'
+              : fmtMoney(n);
+
+            if (!state.isAdmin) return `<td>${amountHtml}</td>`;
+
+            const key = recKeyEnc(r);
+            if (state.editingKey === key) {
+              return `<td><div class="bill-edit-wrap">
+                <input type="text" inputmode="numeric" pattern="[0-9]*"
+                  class="bill-edit-input" id="bill-input-${key}" value="${n}"
+                  oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();confirmBillUpdate('${key}');} if(event.key==='Escape'){cancelBillEdit();}" />
+                <button class="btn-bill-save" title="Save" onclick="confirmBillUpdate('${key}')">✓</button>
+                <button class="btn-bill-cancel" title="Cancel" onclick="cancelBillEdit()">✕</button>
+              </div></td>`;
+            }
+            return `<td><div class="bill-cell">${amountHtml}<button class="btn-bill-update" onclick="startBillEdit('${key}')">Update</button></div></td>`;
+          }
+
+          if (c.key === 'Bill Received Due')
+            return `<td>${n > 0 ? `<span style="color:var(--danger)">${fmtMoney(n)}</span>` : '<span style="color:var(--dim)">—</span>'}</td>`;
+          if (c.key === 'Referral Commission')
+            return `<td style="color:var(--a2);font-weight:700">${fmtMoney(n)}</td>`;
+          return `<td>${n ? fmtMoney(n) : '<span style="color:var(--dim)">—</span>'}</td>`;
+        }
+        case 'date':  return `<td>${fmtDate(v)}</td>`;
+        case 'num': {
+          if (c.key === 'Serial')
+            return `<td><span class="badge b-blue">${esc(v ?? '—')}</span></td>`;
+          return `<td>${esc(v ?? '—')}</td>`;
+        }
+        case 'str':
+        default: {
+          if (c.key === 'Referral Person')
+            return `<td><span class="badge b-warn">${hl(v, query)}</span></td>`;
+          if (c.key === 'Commission Rate')
+            return `<td><span class="badge b-dim">${hl(v, query)}</span></td>`;
+          if (c.key === 'Total Match') {
+            const tm = String(v ?? '').trim();
+            return `<td>${tm && tm !== '0' ? `<span class="badge b-green">${esc(tm)}</span>` : '<span class="badge b-dim">—</span>'}</td>`;
+          }
+          if (c.key === 'Patient Name')
+            return `<td style="font-weight:600">${hl(v, query)}</td>`;
+          return `<td>${hl(v, query)}</td>`;
+        }
+      }
+    }).join('');
+    return `<tr data-idx="${i}">${cells}</tr>`;
+  }).join('');
+
+  /* Scroll highlight for search */
+  if (query) {
+    const first = tableBody.querySelector('tr');
+    if (first) { first.classList.add('hl'); first.scrollIntoView({behavior:'smooth',block:'center'}); }
+  }
+
+  /* Pagination */
+  renderPagination(page, pages, total);
+
+  /* Autofocus the bill-edit input if one is open on this page */
+  if (state.editingKey) {
+    const inp = $('bill-input-' + state.editingKey);
+    if (inp) { inp.focus(); inp.select(); }
+  }
+}
+
+/* ══════════════════════════════════════════
+   PAGINATION
+══════════════════════════════════════════ */
+function renderPagination(page, pages, total) {
+  if (pages <= 1) { pagination.style.display = 'none'; return; }
+  pagination.style.display = 'flex';
+
+  const start = (page-1)*PAGE_SIZE+1;
+  const end   = Math.min(page*PAGE_SIZE, total);
+
+  /* Build page numbers: always show first, last, and window around current */
+  const btns = [];
+  const addBtn = (p, label, active) => {
+    btns.push(`<button class="page-btn${active?' active':''}" data-p="${p}">${label}</button>`);
+  };
+  addBtn(1, '«', false);
+  addBtn(Math.max(1,page-1), '‹', false);
+
+  /* Window: max 5 pages around current */
+  const lo = Math.max(1, page-2), hi = Math.min(pages, page+2);
+  if (lo > 1) btns.push('<span style="color:var(--dim);font-size:.8rem;align-self:center">…</span>');
+  for (let p=lo; p<=hi; p++) addBtn(p, p, p===page);
+  if (hi < pages) btns.push('<span style="color:var(--dim);font-size:.8rem;align-self:center">…</span>');
+
+  addBtn(Math.min(pages,page+1), '›', false);
+  addBtn(pages, '»', false);
+
+  pagination.innerHTML =
+    `<span class="page-info">Showing ${start}–${end} of ${total.toLocaleString()}</span>
+     <div class="page-btns">${btns.join('')}</div>`;
+
+  pagination.querySelectorAll('.page-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const p = parseInt(btn.dataset.p);
+      if (p !== state.page) { state.page = p; state.editingKey = null; renderPage(); }
+    });
+  });
+}
+
+/* ══════════════════════════════════════════
+   BILL RECEIVED — INLINE UPDATE (ADMIN ONLY)
+══════════════════════════════════════════ */
+function startBillEdit(key) {
+  state.editingKey = key;
+  renderPage();
+}
+
+function cancelBillEdit() {
+  state.editingKey = null;
+  renderPage();
+}
+
+function confirmBillUpdate(key) {
+  const inp = $('bill-input-' + key);
+  if (!inp) return;
+  const digitsOnly = inp.value.replace(/[^0-9]/g, '');
+  if (digitsOnly === '') { inp.focus(); return; }
+
+  const newAmount = parseInt(digitsOnly, 10);
+  const record = findRecordByKey(key);
+  if (!record) { cancelBillEdit(); return; }
+
+  const payment = num(record['Payment']);
+  const newDue  = Math.max(payment - newAmount, 0);
+
+  state.pendingUpdate = { record, key, newAmount, newDue };
+
+  confirmModalText.innerHTML =
+    `Update the Bill Received amount for <span class="patient-highlight">${esc(record['Patient Name'] || 'this patient')}</span> ` +
+    `to <span class="amount-highlight">${esc(fmtMoney(newAmount))}</span>?` +
+    (state.isAdmin ? `<br><br>This will recalculate Business, Commission and Admin Share, and update the spreadsheet.` : '');
+  confirmModalErr.classList.remove('show');
+  confirmModalErr.textContent = '';
+  confirmModalYes.disabled = false;
+  confirmModalYes.innerHTML = 'Yes, Update';
+  confirmModalNo.disabled = false;
+  confirmModal.classList.remove('hidden');
+}
+
+function closeConfirmModal() {
+  confirmModal.classList.add('hidden');
+  state.pendingUpdate = null;
+}
+
+async function doBillUpdate() {
+  if (!state.pendingUpdate) return;
+  const { record, key, newAmount, newDue } = state.pendingUpdate;
+
+  confirmModalYes.disabled = true;
+  confirmModalNo.disabled = true;
+  confirmModalYes.innerHTML = '<span class="spinner-sm"></span> Updating…';
+  confirmModalErr.classList.remove('show');
+
+  /* Only send what the update workflow actually needs to compute + match the row.
+     We deliberately do NOT send the whole record: several of its fields (e.g.
+     Commission Rate, which is display-formatted as "60%") are reformatted for
+     the UI and are not the raw values the spreadsheet stores. */
+  const payload = {
+    'Referral Person': record['Referral Person'],
+    'Serial': record['Serial'],
+    'Payment': record['Payment'],
+    'Commission Rate': record['Commission Rate'],
+    'Total Match': record['Total Match'],
+    'Bill Received Amount': newAmount,
+    'Bill Received Due': newDue,
+  };
+
+  try {
+    const res = await fetch(WEBHOOK_UPDATE_BILL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Accept':'application/json'},
+      body: JSON.stringify(payload),
+    });
+
+    const raw = await res.text().catch(() => '');
+    if (!res.ok) throw new Error('Server responded with an error.');
+
+    let data = null;
+    try { data = raw ? JSON.parse(raw) : null; } catch { data = null; }
+    const result = Array.isArray(data) ? data[0] : data;
+
+    /* Apply the (recalculated) values back onto the record in place, so every
+       array that already references this object (filtered/sorted) updates too. */
+    record['Bill Received Amount']  = num(result?.['Bill Received Amount']  ?? newAmount);
+    record['Bill Received Due']     = num(result?.['Bill Received Due']     ?? newDue);
+    record['Total Business Amount'] = num(result?.['Total Business Amount'] ?? record['Total Business Amount']);
+    record['Referral Commission']   = num(result?.['Referral Commission']   ?? record['Referral Commission']);
+    record['Admin Received Amount'] = num(result?.['Admin Received Amount'] ?? record['Admin Received Amount']);
+
+    state.editingKey = null;
+    closeConfirmModal();
+
+    /* Refresh everything on screen with the new numbers */
+    renderSummary();
+    renderAnalytics();
+    sortAndRender();
+
+  } catch (err) {
+    console.error(err);
+    confirmModalErr.textContent = 'Could not update the bill amount. Please check your connection and try again.';
+    confirmModalErr.classList.add('show');
+    confirmModalYes.disabled = false;
+    confirmModalYes.innerHTML = 'Yes, Update';
+    confirmModalNo.disabled = false;
+  }
+}
+
+confirmModalYes.addEventListener('click', doBillUpdate);
+confirmModalNo.addEventListener('click', closeConfirmModal);
+confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeConfirmModal(); });
+
+/* ══════════════════════════════════════════
+   EXPORT CSV
+══════════════════════════════════════════ */
+function exportCSV() {
+  const cols = state.isAdmin ? ADMIN_COLS : USER_COLS;
+  const headers = cols.filter(c=>c.key!=='#').map(c=>c.label);
+  const rows = state.sorted.map(r =>
+    cols.filter(c=>c.key!=='#').map(c => {
+      const v = r[c.key] ?? '';
+      const s = String(v);
+      return s.includes(',') || s.includes('"') || s.includes('\n')
+        ? `"${s.replace(/"/g,'""')}"` : s;
+    }).join(',')
+  );
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `referral_export_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ══════════════════════════════════════════
+   LOGOUT
+══════════════════════════════════════════ */
+function doLogout() {
+  state = {
+    isAdmin:false, userName:'', commissionRate:'—',
+    allRecords:[], filtered:[], sorted:[],
+    sortCol:'Bill Received Date', sortDir:'desc', page:1,
+    editingKey:null, pendingUpdate:null,
+  };
+  inpName.value = ''; inpPass.value = '';
+  fSearch.value = ''; fFrom.value = ''; fTo.value = '';
+  fBillZero.checked = false;
+  tableBody.innerHTML = '';
+  tableHead.innerHTML = '';
+  pagination.style.display = 'none';
+  tblDataWrap.classList.add('hidden');
+  tblLoading.classList.remove('hidden');
+  appPage.style.display = 'none';
+  loginPage.style.display = 'flex';
+  closeConfirmModal();
+  clearError();
+  /* Prevent back-button dashboard access */
+  history.replaceState(null, '', window.location.pathname);
+}
+
+/* ══════════════════════════════════════════
+   EVENTS
+══════════════════════════════════════════ */
+btnLogin.addEventListener('click', doLogin);
+btnLogout.addEventListener('click', doLogout);
+btnApply.addEventListener('click', applyFilters);
+btnExport.addEventListener('click', exportCSV);
+
+btnReset.addEventListener('click', () => {
+  fReferrer.value = '';
+  fFrom.value = ''; fTo.value = '';
+  fBillZero.checked = false;
+  fSearch.value = '';
+  state.page = 1;
+  applyFilters();
+});
+
+/* Live search — debounced */
+let sTimer;
+fSearch.addEventListener('input', () => {
+  clearTimeout(sTimer);
+  sTimer = setTimeout(applyFilters, 220);
+});
+
+/* Referrer dropdown live */
+fReferrer.addEventListener('change', applyFilters);
+
+/* Enter to login */
+[inpName, inpPass].forEach(el =>
+  el.addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); })
+);
+
+/* Prevent browser back to dashboard after logout */
+window.addEventListener('popstate', () => {
+  if (appPage.style.display !== 'none' && !state.userName) doLogout();
+});
+</script>
+</body>
+</html>
